@@ -6,6 +6,7 @@ from groq import Groq
 from datetime import datetime, date
 import time
 import os
+import json
 from dateutil import parser
 
 # =============================================================================
@@ -183,37 +184,97 @@ CYBERPUNK_CSS = """
         font-family: 'Rajdhani', sans-serif;
         font-weight: 700;
     }
+
+    .error-box {
+        background: rgba(255, 0, 0, 0.1);
+        border: 1px solid #ff4444;
+        border-radius: 12px;
+        padding: 20px;
+        margin: 20px 0;
+    }
+
+    .success-box {
+        background: rgba(0, 255, 127, 0.1);
+        border: 1px solid #00ff7f;
+        border-radius: 12px;
+        padding: 20px;
+        margin: 20px 0;
+    }
 </style>
 """
 
 st.markdown(CYBERPUNK_CSS, unsafe_allow_html=True)
 
 # =============================================================================
-# FIREBASE INITIALIZATION (Cloud Secrets + Local JSON)
+# FIREBASE INITIALIZATION (ROBUST ERROR HANDLING)
 # =============================================================================
 @st.cache_resource
 def get_db():
     try:
         if not firebase_admin._apps:
+            # METHOD 1: Streamlit Cloud (st.secrets)
             fbase_secrets = dict(st.secrets.get("fbase", {}))
+            
             if fbase_secrets:
-                cred = credentials.Certificate(fbase_secrets)
-                firebase_admin.initialize_app(cred)
-                return firestore.client()
+                # Validate required fields
+                required = ["type", "project_id", "private_key_id", "private_key", "client_email"]
+                missing = [f for f in required if f not in fbase_secrets or not fbase_secrets[f]]
+                if missing:
+                    st.error(f"🔥 Missing fields in [fbase] secrets: {', '.join(missing)}")
+                    st.info("💡 Make sure you pasted the Service Account JSON (NOT the google-services.json)")
+                    return None
+                
+                # Validate private_key format
+                pk = fbase_secrets.get("private_key", "")
+                if "BEGIN PRIVATE KEY" not in pk:
+                    st.error("🔥 private_key format is invalid!")
+                    st.info("💡 The private_key must contain '-----BEGIN PRIVATE KEY-----'. Make sure newlines are preserved using triple quotes \"\"\" in TOML.")
+                    return None
+                
+                try:
+                    cred = credentials.Certificate(fbase_secrets)
+                    firebase_admin.initialize_app(cred)
+                    return firestore.client()
+                except Exception as cert_err:
+                    err_msg = str(cert_err)
+                    if "PEM" in err_msg or "private_key" in err_msg:
+                        st.error("🔥 Firebase PEM Error: Your private_key is corrupted!")
+                        st.markdown("""
+                            <div class='error-box'>
+                                <h4 style='color:#ff4444; margin-top:0;'>Common Causes:</h4>
+                                <ol style='color:#e0e0e0; font-family:Rajdhani;'>
+                                    <li>You used <code>google-services.json</code> instead of <strong>Service Account JSON</strong></li>
+                                    <li>Newlines (<code>\\n</code>) in private_key got corrupted during copy-paste</li>
+                                    <li>You used single quotes (') instead of triple quotes (\"\"\") for private_key in TOML</li>
+                                </ol>
+                                <p style='color:#00f3ff;'><strong>Fix:</strong> Use the <code>convert_secrets.py</code> script to generate proper TOML format.</p>
+                            </div>
+                        """, unsafe_allow_html=True)
+                        return None
+                    raise
 
+            # METHOD 2: Local Development
             local_json_path = "serviceAccountKey.json"
             if os.path.exists(local_json_path):
-                cred = credentials.Certificate(local_json_path)
-                firebase_admin.initialize_app(cred)
-                return firestore.client()
-
+                try:
+                    with open(local_json_path, "r") as f:
+                        json_data = json.load(f)
+                    cred = credentials.Certificate(json_data)
+                    firebase_admin.initialize_app(cred)
+                    return firestore.client()
+                except json.JSONDecodeError:
+                    st.error("🔥 serviceAccountKey.json is not valid JSON!")
+                    return None
+            
             st.error("""
                 🔥 Firebase credentials not found!
+                
                 Please either:
                 1. Add [fbase] section to `.streamlit/secrets.toml` (for Cloud)
                 2. Place `serviceAccountKey.json` in the app folder (for Local)
             """)
             return None
+            
     except Exception as e:
         st.error(f"Firebase initialization error: {e}")
         return None
@@ -304,17 +365,14 @@ def do_logout():
 # =============================================================================
 def get_friend_status(me_id, other_id):
     if not db or me_id == other_id: return "self"
-    # Check friendship
     fid = f"{min(me_id, other_id)}_{max(me_id, other_id)}"
     if db.collection("friends").document(fid).get().exists:
         return "friends"
-    # Check incoming request
     reqs = list(db.collection("friend_requests").where("receiver_id", "==", me_id).get())
     for r in reqs:
         d = r.to_dict()
         if d.get("sender_id") == other_id and d.get("status") == "pending":
             return "pending_received"
-    # Check outgoing request
     reqs = list(db.collection("friend_requests").where("sender_id", "==", me_id).get())
     for r in reqs:
         d = r.to_dict()
@@ -454,12 +512,11 @@ def render_sidebar():
 
         if st.session_state.authenticated and st.session_state.user:
             me = st.session_state.user
-            # Pending requests badge
-            pending = get_incoming_requests(me["user_id"])
-            if pending:
+            incoming = get_incoming_requests(me["user_id"])
+            if incoming:
                 st.markdown(f"""
                     <div style='background:rgba(255,0,255,0.1); border:1px solid #ff00ff; border-radius:10px; padding:12px; margin-bottom:15px; text-align:center; cursor:pointer;'>
-                        <span style='color:#ff00ff; font-family:Orbitron; font-size:0.9rem;'>🔔 {len(pending)} Friend Request{'s' if len(pending)>1 else ''}</span>
+                        <span style='color:#ff00ff; font-family:Orbitron; font-size:0.9rem;'>🔔 {len(incoming)} Friend Request{'s' if len(incoming)>1 else ''}</span>
                     </div>
                 """, unsafe_allow_html=True)
 
@@ -588,7 +645,7 @@ def auth_screen():
                                 st.error(res["err"])
 
 # =============================================================================
-# MODULE: SEARCH (Users + Posts)
+# MODULE: SEARCH
 # =============================================================================
 def search_module():
     st.markdown("""
@@ -605,7 +662,6 @@ def search_module():
     me = st.session_state.user
     t1, t2 = st.tabs(["👤 Find People", "📝 Search Posts"])
 
-    # ----------------------- FIND PEOPLE -----------------------
     with t1:
         query = st.text_input("Search by name, username, email or city...", placeholder="Type to search...", key="search_users_input")
         if query:
@@ -630,7 +686,6 @@ def search_module():
                             </div>
                         """, unsafe_allow_html=True)
 
-                        # Action buttons
                         cols = st.columns([1, 1, 1])
                         if status == "none":
                             with cols[0]:
@@ -675,10 +730,7 @@ def search_module():
                                     st.session_state.selected_chat_user = u
                                     st.session_state.current_page = "Chats"
                                     st.rerun()
-                        elif status == "self":
-                            pass
 
-    # ----------------------- SEARCH POSTS -----------------------
     with t2:
         query = st.text_input("Search posts by keyword, author or city...", placeholder="Type to search posts...", key="search_posts_input")
         if query:
@@ -693,7 +745,6 @@ def search_module():
                         ts = parser.parse(p["timestamp"]).strftime("%b %d, %Y · %I:%M %p")
                     except:
                         ts = p.get("timestamp", "")
-
                     likes = p.get("likes_count", 0)
                     liked_by = p.get("liked_by", [])
                     already_liked = me["user_id"] in liked_by
@@ -747,8 +798,6 @@ def friends_module():
         return
 
     me = st.session_state.user
-
-    # Incoming Requests
     incoming = get_incoming_requests(me["user_id"])
     if incoming:
         st.markdown(f"""
@@ -779,7 +828,6 @@ def friends_module():
                         st.rerun()
         st.divider()
 
-    # Friends List
     st.subheader("My Friends")
     friends = get_friends(me["user_id"])
     if not friends:
@@ -800,11 +848,6 @@ def friends_module():
                 cols = st.columns([1, 1, 1])
                 with cols[0]:
                     if st.button("💬 Message", use_container_width=True, key=f"frmsg_{f['user_id']}"):
-                        st.session_state.selected_chat_user = f
-                        st.session_state.current_page = "Chats"
-                        st.rerun()
-                with cols[1]:
-                    if st.button("👤 View Profile", use_container_width=True, key=f"frview_{f['user_id']}"):
                         st.session_state.selected_chat_user = f
                         st.session_state.current_page = "Chats"
                         st.rerun()
