@@ -14,7 +14,7 @@ from dateutil import parser
 # =============================================================================
 st.set_page_config(
     page_title="Devi Social",
-    page_icon="",
+    page_icon="🔮",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -431,7 +431,7 @@ def render_sidebar():
     with st.sidebar:
         st.markdown("""
             <div style='text-align:center; padding:30px 0;'>
-                <h1 style='font-family:Orbitron; font-size:2.2rem; margin:0; color:#00f3ff;'> Devi Social</h1>
+                <h1 style='font-family:Orbitron; font-size:2.2rem; margin:0; color:#00f3ff;'>🔮 Devi Social</h1>
                 <p style='color:#ff00ff; font-size:0.95rem; margin-top:8px; font-family:Rajdhani;'>Connect. Chat. Create.</p>
             </div>
         """, unsafe_allow_html=True)
@@ -442,7 +442,7 @@ def render_sidebar():
             if incoming:
                 st.markdown(f"""
                     <div style='background:rgba(255,0,255,0.1); border:1px solid #ff00ff; border-radius:10px; padding:12px; margin-bottom:15px; text-align:center;'>
-                        <span style='color:#ff00ff; font-family:Orbitron; font-size:0.9rem;'> {len(incoming)} Friend Request{'s' if len(incoming)>1 else ''}</span>
+                        <span style='color:#ff00ff; font-family:Orbitron; font-size:0.9rem;'>🔔 {len(incoming)} Friend Request{'s' if len(incoming)>1 else ''}</span>
                     </div>
                 """, unsafe_allow_html=True)
 
@@ -454,17 +454,17 @@ def render_sidebar():
                 <div style='text-align:center; padding:20px; background:rgba(0,243,255,0.05); border-radius:12px; margin-bottom:25px; border:1px solid rgba(0,243,255,0.25);'>
                     <h3 style='margin:0; color:#00f3ff; font-family:Orbitron;'>@{me.get('username','user')}</h3>
                     <p style='margin:5px 0 0 0; color:#aaa; font-family:Rajdhani; font-size:1rem;'>{me.get('full_name','')}</p>
-                    <p style='margin:2px 0 0 0; color:#666; font-size:0.8rem;'> {me.get('city','Unknown')}</p>
+                    <p style='margin:2px 0 0 0; color:#666; font-size:0.8rem;'>📍 {me.get('city','Unknown')}</p>
                 </div>
             """, unsafe_allow_html=True)
 
             nav_items = [
-                (" Feed", "Feed"),
-                (" Search", "Search"),
-                (" Chats", "Chats"),
-                (" Friends", "Friends"),
-                (" My Profile", "Profile"),
-                (" AI Studio", "AI Studio")
+                ("📰 Feed", "Feed"),
+                ("🔍 Search", "Search"),
+                ("💬 Chats", "Chats"),
+                ("👥 Friends", "Friends"),
+                ("👤 My Profile", "Profile"),
+                ("🤖 AI Studio", "AI Studio")
             ]
             for label, page in nav_items:
                 if st.button(label, use_container_width=True, key=f"nav_{page}"):
@@ -473,7 +473,7 @@ def render_sidebar():
                     st.rerun()
 
             st.divider()
-            if st.button(" Logout", use_container_width=True, key="btn_logout"):
+            if st.button("🚪 Logout", use_container_width=True, key="btn_logout"):
                 do_logout()
         else:
             st.markdown("""
@@ -490,12 +490,12 @@ def auth_screen():
     with c2:
         st.markdown("""
             <div style='text-align:center; padding:50px 0 30px 0;'>
-                <h1 style='font-size:3.5rem; font-family:Orbitron;'> Devi Social</h1>
+                <h1 style='font-size:3.5rem; font-family:Orbitron;'>🔮 Devi Social</h1>
                 <p class='neon-text' style='font-size:1.2rem; margin-top:10px;'>The Future of Social Connection</p>
             </div>
         """, unsafe_allow_html=True)
 
-        t1, t2 = st.tabs([" Login", " Sign Up"])
+        t1, t2 = st.tabs(["🔐 Login", "📝 Sign Up"])
 
         with t1:
             with st.form("login"):
@@ -598,7 +598,7 @@ def profile_module():
 
     st.markdown(f"""
         <div class='profile-header'>
-            <h1 style='font-family:Orbitron; color:#00f3ff;'> {profile.get('full_name', 'User')}</h1>
+            <h1 style='font-family:Orbitron; color:#00f3ff;'>👤 {profile.get('full_name', 'User')}</h1>
             <p style='color:#ff00ff; font-family:Rajdhani; font-size:1.2rem;'>@{profile.get('username', '')}</p>
         </div>
     """, unsafe_allow_html=True)
@@ -610,11 +610,11 @@ def profile_module():
             st.image(pic, width=150)
         else:
             st.markdown("""
-                <div style='width:150px; height:150px; border-radius:50%; background:linear-gradient(135deg,#00f3ff,#ff00ff); display:flex; align-items:center; justify-content:center; font-size:3rem;'></div>
+                <div style='width:150px; height:150px; border-radius:50%; background:linear-gradient(135deg,#00f3ff,#ff00ff); display:flex; align-items:center; justify-content:center; font-size:3rem;'>👤</div>
             """, unsafe_allow_html=True)
 
         if is_me:
-            st.subheader(" Update Profile Picture")
+            st.subheader("📸 Update Profile Picture")
             new_pic_url = st.text_input("Image URL (Imgur, etc.)", placeholder="https://i.imgur.com/xxx.jpg", key="profile_pic_url")
             if st.button("Update Picture", use_container_width=True):
                 if new_pic_url:
@@ -627,38 +627,38 @@ def profile_module():
     with c2:
         st.markdown(f"""
             <div style='font-family:Rajdhani; font-size:1.1rem;'>
-                <p><strong style='color:#00f3ff;'> Email:</strong> {profile.get('email', '')}</p>
-                <p><strong style='color:#00f3ff;'> City:</strong> {profile.get('city', '')}</p>
-                <p><strong style='color:#00f3ff;'> Birthday:</strong> {profile.get('birthday', '')}</p>
-                <p><strong style='color:#00f3ff;'> Bio:</strong> {profile.get('bio', '')}</p>
+                <p><strong style='color:#00f3ff;'>📧 Email:</strong> {profile.get('email', '')}</p>
+                <p><strong style='color:#00f3ff;'>📍 City:</strong> {profile.get('city', '')}</p>
+                <p><strong style='color:#00f3ff;'>🎂 Birthday:</strong> {profile.get('birthday', '')}</p>
+                <p><strong style='color:#00f3ff;'>📝 Bio:</strong> {profile.get('bio', '')}</p>
             </div>
         """, unsafe_allow_html=True)
 
         if not is_me:
             status = get_friend_status(me["user_id"], profile["user_id"])
             if status == "none":
-                if st.button(" Add Friend", use_container_width=True):
+                if st.button("➕ Add Friend", use_container_width=True):
                     send_friend_request(me["user_id"], profile["user_id"])
                     st.success("Friend request sent!")
                     time.sleep(0.5)
                     st.rerun()
             elif status == "friends":
-                st.markdown("<span class='badge-friends'> Friends</span>", unsafe_allow_html=True)
-                if st.button(" Message", use_container_width=True):
+                st.markdown("<span class='badge-friends'>✨ Friends</span>", unsafe_allow_html=True)
+                if st.button("💬 Message", use_container_width=True):
                     st.session_state.selected_chat_user = profile
                     st.session_state.current_page = "Chats"
                     st.rerun()
 
     # Show user's posts
     st.divider()
-    st.subheader(" Posts")
+    st.subheader("📝 Posts")
     posts = list(db.collection("posts").where("author_id", "==", profile["user_id"]).order_by("timestamp", direction=firestore.Query.DESCENDING).limit(20).get())
     if not posts:
         st.info("No posts yet")
     for post in posts:
         p = post.to_dict()
         try:
-            ts = parser.parse(p["timestamp"]).strftime("%b %d, %Y � %I:%M %p")
+            ts = parser.parse(p["timestamp"]).strftime("%b %d, %Y · %I:%M %p")
         except:
             ts = p.get("timestamp", "")
         st.markdown(f"""
@@ -676,7 +676,7 @@ def profile_module():
 def feed_module():
     st.markdown("""
         <div style='text-align:center; margin-bottom:30px;'>
-            <h1 style='font-family:Orbitron;'> Social Feed</h1>
+            <h1 style='font-family:Orbitron;'>📰 Social Feed</h1>
             <p style='color:#888; font-family:Rajdhani; font-size:1.1rem;'>Share your thoughts with the Devi community</p>
         </div>
     """, unsafe_allow_html=True)
@@ -689,16 +689,16 @@ def feed_module():
 
     # Create Post
     with st.container():
-        st.subheader(" Create Post")
+        st.subheader("✨ Create Post")
         post_text = st.text_area("What's on your mind?", placeholder="Share something amazing...", height=80, key="post_input")
         
         c1, c2 = st.columns(2)
         with c1:
-            image_url = st.text_input(" Image URL (optional)", placeholder="https://i.imgur.com/xxx.jpg", key="post_image")
+            image_url = st.text_input("🖼️ Image URL (optional)", placeholder="https://i.imgur.com/xxx.jpg", key="post_image")
         with c2:
-            video_url = st.text_input(" Video URL (optional)", placeholder="https://youtube.com/...", key="post_video")
+            video_url = st.text_input("🎥 Video URL (optional)", placeholder="https://youtube.com/...", key="post_video")
         
-        if st.button(" Publish", key="btn_post"):
+        if st.button("🚀 Publish", key="btn_post"):
             if post_text.strip() or image_url or video_url:
                 db.collection("posts").add({
                     "author_id": me["user_id"],
@@ -719,7 +719,7 @@ def feed_module():
                 st.warning("Please enter some content or add a media URL")
 
     st.divider()
-    st.subheader(" Latest Updates")
+    st.subheader("🌐 Latest Updates")
 
     posts = list(db.collection("posts").order_by("timestamp", direction=firestore.Query.DESCENDING).limit(50).get())
     if not posts:
@@ -730,7 +730,7 @@ def feed_module():
         pid = post.id
 
         try:
-            ts = parser.parse(p["timestamp"]).strftime("%b %d, %Y � %I:%M %p")
+            ts = parser.parse(p["timestamp"]).strftime("%b %d, %Y · %I:%M %p")
         except:
             ts = p.get("timestamp", "")
 
@@ -740,7 +740,7 @@ def feed_module():
 
         # Author pic
         author_pic = p.get("author_pic", "")
-        pic_html = f"<img src='{author_pic}' style='width:40px; height:40px; border-radius:50%; border:2px solid #00f3ff; margin-right:10px; object-fit:cover;'>" if author_pic else ""
+        pic_html = f"<img src='{author_pic}' style='width:40px; height:40px; border-radius:50%; border:2px solid #00f3ff; margin-right:10px; object-fit:cover;'>" if author_pic else "👤"
 
         st.markdown(f"""
             <div class='post-card'>
@@ -749,7 +749,7 @@ def feed_module():
                     <div>
                         <span style='color:#00f3ff; font-family:Orbitron; font-size:1.15rem;'>{p.get('author_name','Anonymous')}</span>
                         <span style='color:#666; font-family:Rajdhani;'> @{p.get('author_username','')}</span>
-                        <div style='color:#555; font-size:0.8rem; font-family:Rajdhani;'> {p.get('author_city','')} � {ts}</div>
+                        <div style='color:#555; font-size:0.8rem; font-family:Rajdhani;'>📍 {p.get('author_city','')} · {ts}</div>
                     </div>
                 </div>
                 <div style='color:#e0e0e0; font-family:Rajdhani; font-size:1.1rem; line-height:1.6; margin:15px 0;'>
@@ -771,7 +771,7 @@ def feed_module():
         # Like button
         c1, c2, c3 = st.columns([1, 1, 8])
         with c1:
-            label = f"{'' if already_liked else ''} {likes}"
+            label = f"{'❤️' if already_liked else '🤍'} {likes}"
             if st.button(label, key=f"like_{pid}"):
                 ref = db.collection("posts").document(pid)
                 if not already_liked:
@@ -786,7 +786,7 @@ def feed_module():
                     })
                 st.rerun()
         with c2:
-            if st.button(f" Comments", key=f"comment_btn_{pid}"):
+            if st.button(f"💬 Comments", key=f"comment_btn_{pid}"):
                 st.session_state[f"show_comments_{pid}"] = not st.session_state.get(f"show_comments_{pid}", False)
                 st.rerun()
 
@@ -802,7 +802,7 @@ def feed_module():
                 st.markdown(f"""
                     <div class='comment-box'>
                         <strong style='color:#00f3ff;'>{cd.get('author_name','')}</strong>
-                        <span style='color:#666; font-size:0.8rem;'> @{cd.get('author_username','')} � {cts}</span>
+                        <span style='color:#666; font-size:0.8rem;'> @{cd.get('author_username','')} · {cts}</span>
                         <p style='margin:5px 0 0 0; color:#e0e0e0;'>{cd.get('text','')}</p>
                     </div>
                 """, unsafe_allow_html=True)
@@ -824,7 +824,7 @@ def feed_module():
 
         # View Profile button
         if p.get("author_id") != me["user_id"]:
-            if st.button(f" View @{p.get('author_username')}'s Profile", key=f"view_profile_{pid}"):
+            if st.button(f"👤 View @{p.get('author_username')}'s Profile", key=f"view_profile_{pid}"):
                 st.session_state.view_profile_user = p["author_id"]
                 st.session_state.current_page = "Profile"
                 st.rerun()
@@ -837,7 +837,7 @@ def feed_module():
 def search_module():
     st.markdown("""
         <div style='text-align:center; margin-bottom:30px;'>
-            <h1 style='font-family:Orbitron;'> Search</h1>
+            <h1 style='font-family:Orbitron;'>🔍 Search</h1>
             <p style='color:#888; font-family:Rajdhani; font-size:1.1rem;'>Find people and posts across the Devi network</p>
         </div>
     """, unsafe_allow_html=True)
@@ -847,7 +847,7 @@ def search_module():
         return
 
     me = st.session_state.user
-    t1, t2 = st.tabs([" Find People", " Search Posts"])
+    t1, t2 = st.tabs(["👤 Find People", "📝 Search Posts"])
 
     with t1:
         query = st.text_input("Search by name, username, email or city...", placeholder="Type to search...", key="search_users_input")
@@ -861,7 +861,7 @@ def search_module():
                     status = get_friend_status(me["user_id"], u["user_id"])
                     with st.container():
                         pic = u.get("profile_pic", "")
-                        pic_html = f"<img src='{pic}' style='width:60px; height:60px; border-radius:50%; border:2px solid #00f3ff; margin-right:15px; object-fit:cover;'>" if pic else ""
+                        pic_html = f"<img src='{pic}' style='width:60px; height:60px; border-radius:50%; border:2px solid #00f3ff; margin-right:15px; object-fit:cover;'>" if pic else "👤"
                         st.markdown(f"""
                             <div class='user-card'>
                                 <div style='display:flex; align-items:center;'>
@@ -869,7 +869,7 @@ def search_module():
                                     <div>
                                         <h3 style='margin:0; color:#00f3ff; font-family:Orbitron;'>@{u.get('username','user')}</h3>
                                         <p style='margin:4px 0; color:#ccc; font-family:Rajdhani; font-size:1.05rem;'><strong>{u.get('full_name','')}</strong></p>
-                                        <p style='margin:2px 0; color:#888; font-size:0.9rem; font-family:Rajdhani;'> {u.get('city','')}</p>
+                                        <p style='margin:2px 0; color:#888; font-size:0.9rem; font-family:Rajdhani;'>📍 {u.get('city','')}</p>
                                     </div>
                                 </div>
                             </div>
@@ -878,26 +878,26 @@ def search_module():
                         cols = st.columns([1, 1, 1])
                         if status == "none":
                             with cols[0]:
-                                if st.button(" Add Friend", use_container_width=True, key=f"addf_{u['user_id']}"):
+                                if st.button("➕ Add Friend", use_container_width=True, key=f"addf_{u['user_id']}"):
                                     send_friend_request(me["user_id"], u["user_id"])
                                     st.success("Friend request sent!")
                                     time.sleep(0.5)
                                     st.rerun()
                             with cols[1]:
-                                if st.button(" Profile", use_container_width=True, key=f"prof_{u['user_id']}"):
+                                if st.button("👤 Profile", use_container_width=True, key=f"prof_{u['user_id']}"):
                                     st.session_state.view_profile_user = u["user_id"]
                                     st.session_state.current_page = "Profile"
                                     st.rerun()
                         elif status == "friends":
                             with cols[0]:
-                                st.markdown("<span class='badge-friends'> Friends</span>", unsafe_allow_html=True)
+                                st.markdown("<span class='badge-friends'>✨ Friends</span>", unsafe_allow_html=True)
                             with cols[1]:
-                                if st.button(" Message", use_container_width=True, key=f"msgfr_{u['user_id']}"):
+                                if st.button("💬 Message", use_container_width=True, key=f"msgfr_{u['user_id']}"):
                                     st.session_state.selected_chat_user = u
                                     st.session_state.current_page = "Chats"
                                     st.rerun()
                             with cols[2]:
-                                if st.button(" Profile", use_container_width=True, key=f"prof2_{u['user_id']}"):
+                                if st.button("👤 Profile", use_container_width=True, key=f"prof2_{u['user_id']}"):
                                     st.session_state.view_profile_user = u["user_id"]
                                     st.session_state.current_page = "Profile"
                                     st.rerun()
@@ -912,7 +912,7 @@ def search_module():
                 for p in results:
                     pid = p["id"]
                     try:
-                        ts = parser.parse(p["timestamp"]).strftime("%b %d, %Y � %I:%M %p")
+                        ts = parser.parse(p["timestamp"]).strftime("%b %d, %Y · %I:%M %p")
                     except:
                         ts = p.get("timestamp", "")
                     likes = p.get("likes_count", 0)
@@ -938,7 +938,7 @@ def search_module():
 
                     c1, c2 = st.columns([1, 10])
                     with c1:
-                        label = f"{'' if already_liked else ''} {likes}"
+                        label = f"{'❤️' if already_liked else '🤍'} {likes}"
                         if st.button(label, key=f"search_like_{pid}"):
                             ref = db.collection("posts").document(pid)
                             if not already_liked:
@@ -959,7 +959,7 @@ def search_module():
 def chat_module():
     st.markdown("""
         <div style='text-align:center; margin-bottom:30px;'>
-            <h1 style='font-family:Orbitron;'> Devi Messenger</h1>
+            <h1 style='font-family:Orbitron;'>💬 Devi Messenger</h1>
             <p style='color:#888; font-family:Rajdhani; font-size:1.1rem;'>WhatsApp-style messaging</p>
         </div>
     """, unsafe_allow_html=True)
@@ -973,7 +973,7 @@ def chat_module():
 
     # Contacts Sidebar
     with c1:
-        st.subheader(" Chats")
+        st.subheader("👥 Chats")
         search = st.text_input("Search contacts...", placeholder="username...")
 
         # Show friends first, then others
@@ -982,10 +982,10 @@ def chat_module():
         others = [u.to_dict() for u in all_users if u.to_dict().get("user_id") != me["user_id"] and u.to_dict() not in friends]
 
         if friends:
-            st.markdown("<p style='color:#00ff7f; font-family:Rajdhani;'> Friends</p>", unsafe_allow_html=True)
+            st.markdown("<p style='color:#00ff7f; font-family:Rajdhani;'>✨ Friends</p>", unsafe_allow_html=True)
             for f in friends:
                 pic = f.get("profile_pic", "")
-                pic_html = f"<img src='{pic}' style='width:35px; height:35px; border-radius:50%; border:1px solid #00f3ff; margin-right:8px; object-fit:cover;'>" if pic else ""
+                pic_html = f"<img src='{pic}' style='width:35px; height:35px; border-radius:50%; border:1px solid #00f3ff; margin-right:8px; object-fit:cover;'>" if pic else "👤"
                 if st.button(f"{pic_html} @{f.get('username','')}", use_container_width=True, key=f"chatf_{f['user_id']}"):
                     st.session_state.selected_chat_user = f
                     st.rerun()
@@ -1013,7 +1013,7 @@ def chat_module():
 
         other = st.session_state.selected_chat_user
         pic = other.get("profile_pic", "")
-        pic_html = f"<img src='{pic}' style='width:40px; height:40px; border-radius:50%; border:2px solid #00f3ff; margin-right:10px; object-fit:cover;'>" if pic else ""
+        pic_html = f"<img src='{pic}' style='width:40px; height:40px; border-radius:50%; border:2px solid #00f3ff; margin-right:10px; object-fit:cover;'>" if pic else "👤"
         
         st.markdown(f"""
             <div style='padding:15px; background:rgba(0,243,255,0.05); border-radius:12px; margin-bottom:15px; border:1px solid rgba(0,243,255,0.25); display:flex; align-items:center;'>
@@ -1042,7 +1042,7 @@ def chat_module():
             if not msgs:
                 st.markdown("""
                     <div style='text-align:center; padding:60px; color:#444; font-family:Rajdhani;'>
-                        <p>No messages yet. Say hello! </p>
+                        <p>No messages yet. Say hello! 👋</p>
                     </div>
                 """, unsafe_allow_html=True)
 
@@ -1068,7 +1068,7 @@ def chat_module():
             with cols[0]:
                 txt = st.text_input("Message...", placeholder="Type a message...", label_visibility="collapsed", key="msg_input")
             with cols[1]:
-                submitted = st.form_submit_button("", use_container_width=True)
+                submitted = st.form_submit_button("📤", use_container_width=True)
             if submitted and txt.strip():
                 db.collection("messages").add({
                     "sender_id": me["user_id"],
@@ -1087,7 +1087,7 @@ def chat_module():
 def friends_module():
     st.markdown("""
         <div style='text-align:center; margin-bottom:30px;'>
-            <h1 style='font-family:Orbitron;'> Friends</h1>
+            <h1 style='font-family:Orbitron;'>👥 Friends</h1>
             <p style='color:#888; font-family:Rajdhani; font-size:1.1rem;'>Manage your connections</p>
         </div>
     """, unsafe_allow_html=True)
@@ -1101,7 +1101,7 @@ def friends_module():
     if incoming:
         st.markdown(f"""
             <div style='background:rgba(255,0,255,0.05); border:1px solid #ff00ff; border-radius:12px; padding:20px; margin-bottom:30px;'>
-                <h3 style='color:#ff00ff; font-family:Orbitron; margin:0 0 15px 0;'> Friend Requests ({len(incoming)})</h3>
+                <h3 style='color:#ff00ff; font-family:Orbitron; margin:0 0 15px 0;'>🔔 Friend Requests ({len(incoming)})</h3>
             </div>
         """, unsafe_allow_html=True)
         for req in incoming:
@@ -1112,17 +1112,17 @@ def friends_module():
                     st.markdown(f"""
                         <div style='font-family:Rajdhani;'>
                             <strong style='color:#00f3ff; font-size:1.1rem;'>@{sender.get('username','')}</strong><br>
-                            <span style='color:#aaa;'>{sender.get('full_name','')} �  {sender.get('city','')}</span>
+                            <span style='color:#aaa;'>{sender.get('full_name','')} · 📍 {sender.get('city','')}</span>
                         </div>
                     """, unsafe_allow_html=True)
                 with cols[1]:
-                    if st.button(" Accept", use_container_width=True, key=f"accept_{req['id']}"):
+                    if st.button("✅ Accept", use_container_width=True, key=f"accept_{req['id']}"):
                         accept_friend_request(req["id"])
                         st.success("You are now friends!")
                         time.sleep(0.5)
                         st.rerun()
                 with cols[2]:
-                    if st.button(" Reject", use_container_width=True, key=f"reject_{req['id']}"):
+                    if st.button("❌ Reject", use_container_width=True, key=f"reject_{req['id']}"):
                         reject_friend_request(req["id"])
                         st.rerun()
         st.divider()
@@ -1130,11 +1130,11 @@ def friends_module():
     st.subheader("My Friends")
     friends = get_friends(me["user_id"])
     if not friends:
-        st.info("No friends yet. Go to  Search to find people!")
+        st.info("No friends yet. Go to 🔍 Search to find people!")
     else:
         for f in friends:
             pic = f.get("profile_pic", "")
-            pic_html = f"<img src='{pic}' style='width:50px; height:50px; border-radius:50%; border:2px solid #00f3ff; margin-right:10px; object-fit:cover;'>" if pic else ""
+            pic_html = f"<img src='{pic}' style='width:50px; height:50px; border-radius:50%; border:2px solid #00f3ff; margin-right:10px; object-fit:cover;'>" if pic else "👤"
             with st.container():
                 st.markdown(f"""
                     <div class='user-card'>
@@ -1142,19 +1142,19 @@ def friends_module():
                             {pic_html}
                             <div>
                                 <h3 style='margin:0; color:#00f3ff; font-family:Orbitron;'>@{f.get('username','')}</h3>
-                                <p style='margin:4px 0 0 0; color:#ccc; font-family:Rajdhani;'>{f.get('full_name','')} �  {f.get('city','')}</p>
+                                <p style='margin:4px 0 0 0; color:#ccc; font-family:Rajdhani;'>{f.get('full_name','')} · 📍 {f.get('city','')}</p>
                             </div>
                         </div>
                     </div>
                 """, unsafe_allow_html=True)
                 cols = st.columns([1, 1, 1])
                 with cols[0]:
-                    if st.button(" Message", use_container_width=True, key=f"frmsg_{f['user_id']}"):
+                    if st.button("💬 Message", use_container_width=True, key=f"frmsg_{f['user_id']}"):
                         st.session_state.selected_chat_user = f
                         st.session_state.current_page = "Chats"
                         st.rerun()
                 with cols[1]:
-                    if st.button(" Profile", use_container_width=True, key=f"frview_{f['user_id']}"):
+                    if st.button("👤 Profile", use_container_width=True, key=f"frview_{f['user_id']}"):
                         st.session_state.view_profile_user = f["user_id"]
                         st.session_state.current_page = "Profile"
                         st.rerun()
@@ -1165,7 +1165,7 @@ def friends_module():
 def ai_module():
     st.markdown("""
         <div style='text-align:center; margin-bottom:30px;'>
-            <h1 style='font-family:Orbitron;'> AI Studio</h1>
+            <h1 style='font-family:Orbitron;'>🤖 AI Studio</h1>
             <p style='color:#888; font-family:Rajdhani; font-size:1.1rem;'>Powered by Groq LLM</p>
         </div>
     """, unsafe_allow_html=True)
@@ -1176,7 +1176,7 @@ def ai_module():
     c1, c2 = st.columns([3, 2])
 
     with c1:
-        st.subheader(" AI Chat")
+        st.subheader("💬 AI Chat")
         chat_box = st.container()
         with chat_box:
             if not st.session_state.ai_messages:
@@ -1236,7 +1236,7 @@ def ai_module():
                     st.session_state.ai_messages.pop()
 
     with c2:
-        st.subheader(" Caption Generator")
+        st.subheader("✨ Caption Generator")
         st.markdown("""
             <div style='background:rgba(255,0,255,0.05); border:1px solid rgba(255,0,255,0.3); border-radius:12px; padding:18px; margin-bottom:20px;'>
                 <p style='color:#ff00ff; font-family:Rajdhani; font-size:1rem;'>Generate engaging post captions instantly!</p>
@@ -1246,7 +1246,7 @@ def ai_module():
         topic = st.text_area("What's your post about?", placeholder="Describe your mood, photo, or topic...", height=80, key="cap_topic")
         tone = st.selectbox("Tone", ["Casual", "Professional", "Funny", "Inspirational", "Poetic", "Rebellious"], key="cap_tone")
 
-        if st.button(" Generate Caption", use_container_width=True, key="btn_cap"):
+        if st.button("🚀 Generate Caption", use_container_width=True, key="btn_cap"):
             if topic.strip():
                 try:
                     groq_key = st.secrets.get("GROQ_API_KEY", "")
@@ -1270,7 +1270,7 @@ def ai_module():
                                 </div>
                             """, unsafe_allow_html=True)
 
-                            if st.button(" Use in Feed", key="btn_use_cap"):
+                            if st.button("📋 Use in Feed", key="btn_use_cap"):
                                 st.session_state["post_input"] = cap
                                 st.session_state.current_page = "Feed"
                                 st.success("Copied to Feed!")
