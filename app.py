@@ -11,128 +11,29 @@ import base64
 from dateutil import parser
 import re
 
-# =============================================================================
-# PAGE CONFIG
-# =============================================================================
-st.set_page_config(
-    page_title="Devi Social",
-    page_icon="🔮",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+st.set_page_config(page_title="Devi Social", page_icon="🔮", layout="wide", initial_sidebar_state="expanded")
 
-# =============================================================================
-# CSS - CYBERPUNK THEME
-# =============================================================================
+# CSS
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap');
-
-.stApp {
-    background: linear-gradient(135deg, #050510 0%, #0a0a1a 50%, #0d1b2a 100%);
-    color: #e0e0e0;
-}
-
-[data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #08081a 0%, #0f0f2d 100%) !important;
-    border-right: 1px solid rgba(0, 243, 255, 0.3);
-}
-
-h1, h2, h3 {
-    font-family: 'Orbitron', sans-serif !important;
-    color: #00f3ff !important;
-    text-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
-}
-
-.stButton > button {
-    background: linear-gradient(90deg, #00f3ff, #0066cc) !important;
-    color: #000 !important;
-    font-family: 'Rajdhani', sans-serif !important;
-    font-weight: 700 !important;
-    border: none !important;
-    border-radius: 8px !important;
-    box-shadow: 0 0 15px rgba(0, 243, 255, 0.3) !important;
-}
-
-.stTextInput > div > div > input,
-.stTextArea > div > div > textarea {
-    background: rgba(0, 243, 255, 0.05) !important;
-    border: 1px solid rgba(0, 243, 255, 0.4) !important;
-    color: #fff !important;
-    border-radius: 8px !important;
-    font-family: 'Rajdhani', sans-serif !important;
-}
-
-.post-card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(0, 243, 255, 0.2);
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 20px;
-}
-
-.profile-header {
-    background: linear-gradient(135deg, rgba(0, 243, 255, 0.1), rgba(255, 0, 255, 0.1));
-    border: 1px solid rgba(0, 243, 255, 0.3);
-    border-radius: 20px;
-    padding: 30px;
-    text-align: center;
-    margin-bottom: 30px;
-}
-
-.chat-bubble-user {
-    background: linear-gradient(135deg, #00f3ff, #0066cc);
-    color: #000;
-    padding: 10px 16px;
-    border-radius: 18px 18px 0 18px;
-    margin: 6px 0;
-    max-width: 70%;
-    float: right;
-    clear: both;
-    font-weight: 600;
-    font-family: 'Rajdhani', sans-serif;
-}
-
-.chat-bubble-other {
-    background: rgba(255, 255, 255, 0.08);
-    color: #e0e0e0;
-    padding: 10px 16px;
-    border-radius: 18px 18px 18px 0;
-    margin: 6px 0;
-    max-width: 70%;
-    float: left;
-    clear: both;
-    border: 1px solid rgba(0, 243, 255, 0.3);
-    font-family: 'Rajdhani', sans-serif;
-}
-
-.comment-box {
-    background: rgba(255, 255, 255, 0.02);
-    border-left: 3px solid #00f3ff;
-    padding: 8px 12px;
-    margin: 6px 0;
-    border-radius: 0 8px 8px 0;
-}
-
-.reply-box {
-    background: rgba(0, 243, 255, 0.05);
-    border-left: 2px solid #ff00ff;
-    padding: 6px 10px;
-    margin: 4px 0 4px 20px;
-    border-radius: 0 6px 6px 0;
-    font-size: 0.9rem;
-}
-
-.mention {
-    color: #00f3ff;
-    font-weight: bold;
-}
+.stApp { background: linear-gradient(135deg, #050510 0%, #0a0a1a 50%, #0d1b2a 100%); color: #e0e0e0; }
+[data-testid="stSidebar"] { background: linear-gradient(180deg, #08081a 0%, #0f0f2d 100%) !important; border-right: 1px solid rgba(0, 243, 255, 0.3); }
+h1, h2, h3 { font-family: 'Orbitron', sans-serif !important; color: #00f3ff !important; text-shadow: 0 0 15px rgba(0, 243, 255, 0.4); }
+.stButton > button { background: linear-gradient(90deg, #00f3ff, #0066cc) !important; color: #000 !important; font-family: 'Rajdhani', sans-serif !important; font-weight: 700 !important; border: none !important; border-radius: 8px !important; box-shadow: 0 0 15px rgba(0, 243, 255, 0.3) !important; }
+.stTextInput > div > div > input, .stTextArea > div > div > textarea { background: rgba(0, 243, 255, 0.05) !important; border: 1px solid rgba(0, 243, 255, 0.4) !important; color: #fff !important; border-radius: 8px !important; font-family: 'Rajdhani', sans-serif !important; }
+.post-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(0, 243, 255, 0.2); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+.profile-header { background: linear-gradient(135deg, rgba(0, 243, 255, 0.1), rgba(255, 0, 255, 0.1)); border: 1px solid rgba(0, 243, 255, 0.3); border-radius: 20px; padding: 30px; text-align: center; margin-bottom: 30px; }
+.chat-bubble-user { background: linear-gradient(135deg, #00f3ff, #0066cc); color: #000; padding: 10px 16px; border-radius: 18px 18px 0 18px; margin: 6px 0; max-width: 70%; float: right; clear: both; font-weight: 600; font-family: 'Rajdhani', sans-serif; }
+.chat-bubble-other { background: rgba(255, 255, 255, 0.08); color: #e0e0e0; padding: 10px 16px; border-radius: 18px 18px 18px 0; margin: 6px 0; max-width: 70%; float: left; clear: both; border: 1px solid rgba(0, 243, 255, 0.3); font-family: 'Rajdhani', sans-serif; }
+.comment-box { background: rgba(255, 255, 255, 0.02); border-left: 3px solid #00f3ff; padding: 8px 12px; margin: 6px 0; border-radius: 0 8px 8px 0; }
+.reply-box { background: rgba(0, 243, 255, 0.05); border-left: 2px solid #ff00ff; padding: 6px 10px; margin: 4px 0 4px 20px; border-radius: 0 6px 6px 0; font-size: 0.9rem; }
+.mention { color: #00f3ff; font-weight: bold; }
+.notification-badge { background: #ff00ff; color: #fff; border-radius: 50%; padding: 2px 8px; font-size: 0.8rem; }
 </style>
 """, unsafe_allow_html=True)
 
-# =============================================================================
-# FIREBASE INIT
-# =============================================================================
+# Firebase
 @st.cache_resource
 def get_db():
     try:
@@ -155,9 +56,7 @@ def get_db():
 db = get_db()
 FIREBASE_API_KEY = st.secrets.get("FIREBASE_API_KEY", "")
 
-# =============================================================================
-# SESSION STATE
-# =============================================================================
+# Session
 if "authenticated" not in st.session_state: st.session_state.authenticated = False
 if "user" not in st.session_state: st.session_state.user = None
 if "page" not in st.session_state: st.session_state.page = "Feed"
@@ -166,10 +65,9 @@ if "view_user" not in st.session_state: st.session_state.view_user = None
 if "ai_msgs" not in st.session_state: st.session_state.ai_msgs = []
 if "edit_post" not in st.session_state: st.session_state.edit_post = None
 if "share_post" not in st.session_state: st.session_state.share_post = None
+if "notifications" not in st.session_state: st.session_state.notifications = []
 
-# =============================================================================
-# FILE UPLOAD HELPERS (Base64 for small images)
-# =============================================================================
+# File helper
 def file_to_base64(file):
     if file is None: return None
     try:
@@ -178,9 +76,7 @@ def file_to_base64(file):
         return f"data:{file.type};base64,{b64}"
     except: return None
 
-# =============================================================================
-# AUTH HELPERS
-# =============================================================================
+# Auth
 def firebase_auth(endpoint, email, password):
     url = f"https://identitytoolkit.googleapis.com/v1/accounts:{endpoint}?key={FIREBASE_API_KEY}"
     try:
@@ -200,9 +96,7 @@ def save_profile(uid, data):
     db.collection("users").document(uid).set(data)
     return True
 
-# =============================================================================
-# FRIEND HELPERS
-# =============================================================================
+# Friends
 def get_friend_status(me_id, other_id):
     if not db or me_id == other_id: return "self"
     fid = f"{min(me_id, other_id)}_{max(me_id, other_id)}"
@@ -235,23 +129,31 @@ def get_my_friends(uid):
 def get_incoming_reqs(uid):
     return [{**r.to_dict(), "id": r.id} for r in db.collection("friend_requests").where("receiver_id", "==", uid).get() if r.to_dict().get("status") == "pending"]
 
-# =============================================================================
-# MENTION HELPER
-# =============================================================================
-def parse_mentions(text, friends_list):
-    mentions = re.findall(r'@(\w+)', text)
-    return mentions
+# Notifications
+def get_notifications(uid):
+    if not db: return []
+    return [{**n.to_dict(), "id": n.id} for n in db.collection("notifications").where("user_id", "==", uid).order_by("timestamp", direction=firestore.Query.DESCENDING).limit(20).get()]
 
-# =============================================================================
-# SIDEBAR
-# =============================================================================
+def add_notification(user_id, text, type_="general"):
+    db.collection("notifications").add({
+        "user_id": user_id, "text": text, "type": type_,
+        "read": False, "timestamp": datetime.now().isoformat()
+    })
+
+# Sidebar
 with st.sidebar:
     st.markdown("<h1 style='text-align:center; font-size:2rem;'>🔮 Devi Social</h1>", unsafe_allow_html=True)
     if st.session_state.authenticated and st.session_state.user:
         u = st.session_state.user
         st.markdown(f"<p style='text-align:center; color:#00f3ff;'>@{u['username']}</p>", unsafe_allow_html=True)
-        for label, page in [("📰 Feed", "Feed"), ("🔍 Search", "Search"), ("💬 Chats", "Chats"), ("👥 Friends", "Friends"), ("👤 Profile", "Profile"), ("🤖 AI Studio", "AI")]:
-            if st.button(label, use_container_width=True):
+        
+        # Notifications badge
+        notifs = get_notifications(me["user_id"]) if db else []
+        unread = len([n for n in notifs if not n.get("read", False)])
+        
+        for label, page in [("📰 Feed", "Feed"), ("🔍 Search", "Search"), ("💬 Chats", "Chats"), ("👥 Friends", "Friends"), ("🔔 Notifications", "Notifs"), ("👤 Profile", "Profile"), ("🤖 AI Studio", "AI")]:
+            badge = f" <span class='notification-badge'>{unread}</span>" if page == "Notifs" and unread > 0 else ""
+            if st.button(f"{label}{badge}", use_container_width=True):
                 st.session_state.page = page
                 st.session_state.view_user = None
                 st.rerun()
@@ -259,9 +161,7 @@ with st.sidebar:
             for key in list(st.session_state.keys()): del st.session_state[key]
             st.rerun()
 
-# =============================================================================
-# AUTH SCREEN
-# =============================================================================
+# Auth Screen
 if not st.session_state.authenticated:
     c1, c2, c3 = st.columns([1, 2, 1])
     with c2:
@@ -291,6 +191,8 @@ if not st.session_state.authenticated:
                 ct = st.text_input("City")
                 bio = st.text_area("Bio")
                 cpw = st.text_input("Confirm Password", type="password")
+                # Profile pic upload during signup
+                dp = st.file_uploader("Profile Picture", type=["jpg", "jpeg", "png"])
                 if st.form_submit_button("Create Account"):
                     if not all([fn, un, em, pw, ct, bio]): st.error("All fields required")
                     elif pw != cpw: st.error("Passwords don't match")
@@ -300,7 +202,8 @@ if not st.session_state.authenticated:
                             st.error("Username taken"); st.stop()
                         res = firebase_auth("signUp", em, pw)
                         if res["ok"]:
-                            data = {"user_id": res["uid"], "email": em, "username": un, "full_name": fn, "birthday": bd.isoformat(), "city": ct, "bio": bio, "profile_pic": "", "cover_pic": "", "created_at": datetime.now().isoformat()}
+                            dp_data = file_to_base64(dp)
+                            data = {"user_id": res["uid"], "email": em, "username": un, "full_name": fn, "birthday": bd.isoformat(), "city": ct, "bio": bio, "profile_pic": dp_data or "", "cover_pic": "", "created_at": datetime.now().isoformat()}
                             if save_profile(res["uid"], data):
                                 st.session_state.authenticated = True
                                 st.session_state.user = data
@@ -309,9 +212,7 @@ if not st.session_state.authenticated:
                         else: st.error(res["err"])
     st.stop()
 
-# =============================================================================
-# MAIN APP
-# =============================================================================
+# Main App
 me = st.session_state.user
 page = st.session_state.page
 
@@ -321,19 +222,20 @@ page = st.session_state.page
 if page == "Feed":
     st.markdown("<h1 style='text-align:center;'>📰 Social Feed</h1>", unsafe_allow_html=True)
     
-    # Create Post
     with st.container():
         st.subheader("✨ Create Post")
         post_text = st.text_area("What's on your mind?", height=80, key="post_text")
         
-        # Mention friends
+        # Privacy
+        privacy = st.selectbox("Privacy", ["Public", "Friends Only", "Private"])
+        
+        # Mentions
         friends = get_my_friends(me["user_id"])
         if friends:
             mention_opts = [f"@{f['username']}" for f in friends if f]
             if mention_opts:
                 selected = st.multiselect("🏷️ Mention Friends", mention_opts)
-                if selected:
-                    post_text += " " + " ".join(selected)
+                if selected: post_text += " " + " ".join(selected)
         
         c1, c2 = st.columns(2)
         img_file = c1.file_uploader("🖼️ Upload Image", type=["jpg", "jpeg", "png", "gif"])
@@ -342,47 +244,50 @@ if page == "Feed":
         if st.button("🚀 Publish"):
             img_data = file_to_base64(img_file)
             vid_data = file_to_base64(vid_file)
-            
             if post_text.strip() or img_data or vid_data:
-                # Parse mentions
-                mentions = parse_mentions(post_text, friends)
-                
+                mentions = re.findall(r'@(\w+)', post_text)
                 db.collection("posts").add({
-                    "author_id": me["user_id"],
-                    "author_name": me["full_name"],
-                    "author_username": me["username"],
-                    "author_city": me.get("city", ""),
-                    "author_pic": me.get("profile_pic", ""),
-                    "content": post_text.strip(),
-                    "image": img_data,
-                    "video": vid_data,
-                    "mentions": mentions,
-                    "timestamp": datetime.now().isoformat(),
-                    "likes": 0,
-                    "liked_by": [],
-                    "shares": 0
+                    "author_id": me["user_id"], "author_name": me["full_name"], "author_username": me["username"],
+                    "author_city": me.get("city", ""), "author_pic": me.get("profile_pic", ""),
+                    "content": post_text.strip(), "image": img_data, "video": vid_data,
+                    "mentions": mentions, "privacy": privacy,
+                    "timestamp": datetime.now().isoformat(), "likes": 0, "liked_by": [], "shares": 0
                 })
-                st.success("Posted!")
-                st.rerun()
-            else:
-                st.warning("Add some content")
+                # Notify mentioned friends
+                for m in mentions:
+                    for f in friends:
+                        if f and f.get("username") == m:
+                            add_notification(f["user_id"], f"@{me['username']} mentioned you in a post!", "mention")
+                st.success("Posted!"); st.rerun()
+            else: st.warning("Add some content")
     
     st.divider()
     
-    # Show Posts
+    # Show Posts (filter by privacy)
     all_posts = list(db.collection("posts").limit(100).get())
-    all_posts.sort(key=lambda x: x.to_dict().get("timestamp", ""), reverse=True)
+    filtered_posts = []
+    for p in all_posts:
+        d = p.to_dict()
+        pid = p.id
+        # Public posts visible to all
+        if d.get("privacy") == "Public":
+            filtered_posts.append((pid, d))
+        # Friends only - check if friends
+        elif d.get("privacy") == "Friends Only":
+            if d["author_id"] == me["user_id"] or get_friend_status(me["user_id"], d["author_id"]) == "friends":
+                filtered_posts.append((pid, d))
+        # Private - only author
+        elif d.get("privacy") == "Private" and d["author_id"] == me["user_id"]:
+            filtered_posts.append((pid, d))
     
-    for post in all_posts[:50]:
-        p = post.to_dict()
-        pid = post.id
-        
+    filtered_posts.sort(key=lambda x: x[1].get("timestamp", ""), reverse=True)
+    
+    for pid, p in filtered_posts[:50]:
         ts = ""
         if p.get("timestamp"):
             try: ts = parser.parse(p["timestamp"]).strftime("%b %d, %Y · %I:%M %p")
             except: ts = p["timestamp"][:16]
         
-        # Author row
         cols = st.columns([0.1, 0.7, 0.2])
         with cols[0]:
             if p.get("author_pic"): st.image(p["author_pic"], width=40)
@@ -392,60 +297,36 @@ if page == "Feed":
                 st.session_state.view_user = p["author_id"]
                 st.session_state.page = "Profile"
                 st.rerun()
-            st.caption(f"📍 {p.get('author_city', '')} · {ts}")
+            st.caption(f"📍 {p.get('author_city', '')} · {ts} · 🔒{p.get('privacy','Public')}")
         with cols[2]:
-            # Edit/Delete for author
             if p.get("author_id") == me["user_id"]:
-                if st.button("✏️", key=f"edit_{pid}"):
-                    st.session_state.edit_post = pid
-                    st.rerun()
+                if st.button("✏️", key=f"edit_{pid}"): st.session_state.edit_post = pid; st.rerun()
                 if st.button("🗑️", key=f"del_{pid}"):
                     db.collection("posts").document(pid).delete()
-                    st.success("Deleted!")
-                    time.sleep(1)
-                    st.rerun()
-            # Share button
+                    st.success("Deleted!"); time.sleep(1); st.rerun()
             if st.button("🔗 Share", key=f"share_{pid}"):
-                st.session_state.share_post = pid
-                st.rerun()
+                st.session_state.share_post = pid; st.rerun()
         
-        # Edit mode
         if st.session_state.edit_post == pid:
             with st.form(f"edit_form_{pid}"):
                 new_text = st.text_area("Edit post", value=p.get("content", ""))
                 if st.form_submit_button("Save"):
                     db.collection("posts").document(pid).update({"content": new_text})
-                    st.session_state.edit_post = None
-                    st.success("Updated!")
-                    st.rerun()
-                if st.form_submit_button("Cancel"):
-                    st.session_state.edit_post = None
-                    st.rerun()
+                    st.session_state.edit_post = None; st.success("Updated!"); st.rerun()
+                if st.form_submit_button("Cancel"): st.session_state.edit_post = None; st.rerun()
         
-        # Share mode
         if st.session_state.share_post == pid:
             share_url = f"{st.secrets.get('APP_URL', 'https://your-app.streamlit.app')}?post={pid}"
             st.code(share_url, language="text")
             if st.button("Close", key=f"close_share_{pid}"):
-                st.session_state.share_post = None
-                st.rerun()
+                st.session_state.share_post = None; st.rerun()
         
-        # Content with mentions highlighted
         content = p.get("content", "")
-        for mention in p.get("mentions", []):
-            content = content.replace(f"@{mention}", f"<span class='mention'>@{mention}</span>")
-        if content:
-            st.markdown(f"<p style='font-size:1.1rem;'>{content}</p>", unsafe_allow_html=True)
+        for mention in p.get("mentions", []): content = content.replace(f"@{mention}", f"<span class='mention'>@{mention}</span>")
+        if content: st.markdown(f"<p style='font-size:1.1rem;'>{content}</p>", unsafe_allow_html=True)
+        if p.get("image"): st.image(p["image"], use_container_width=True)
+        if p.get("video"): st.video(p["video"])
         
-        # Image
-        if p.get("image"):
-            st.image(p["image"], use_container_width=True)
-        
-        # Video
-        if p.get("video"):
-            st.video(p["video"])
-        
-        # Like button
         liked = me["user_id"] in p.get("liked_by", [])
         c1, c2, c3 = st.columns([1, 1, 1])
         with c1:
@@ -454,44 +335,61 @@ if page == "Feed":
                 if liked: ref.update({"likes": firestore.Increment(-1), "liked_by": firestore.ArrayRemove([me["user_id"]])})
                 else: ref.update({"likes": firestore.Increment(1), "liked_by": firestore.ArrayUnion([me["user_id"]])})
                 st.rerun()
-        with c2:
-            st.button(f"💬 {len(list(db.collection('posts').document(pid).collection('comments').get()))}", key=f"com_count_{pid}")
-        with c3:
-            st.button(f"🔗 {p.get('shares', 0)}", key=f"share_count_{pid}")
+        with c2: st.button(f"💬 {len(list(db.collection('posts').document(pid).collection('comments').get()))}", key=f"com_count_{pid}")
+        with c3: st.button(f"🔗 {p.get('shares', 0)}", key=f"share_count_{pid}")
         
-        # Comments with replies
         with st.expander("💬 Comments & Replies"):
-            for c in db.collection("posts").document(pid).collection("comments").order_by("timestamp").get():
-                cd = c.to_dict()
-                cid = c.id
-                st.markdown(f"<div class='comment-box'><b>{cd['author_name']}</b> <span style='color:#666;font-size:0.8rem;'>{cd.get('timestamp','')[:16]}</span><br>{cd['text']}</div>", unsafe_allow_html=True)
+            for c in db.collection("posts").document(pid).collection("comments").get():
+                cd = c.to_dict(); cid = c.id
+                # Comment with author pic
+                com_pic = cd.get("author_pic", "")
+                com_header = f"<img src='{com_pic}' style='width:25px;height:25px;border-radius:50%;margin-right:5px;'>" if com_pic else "👤"
+                st.markdown(f"<div class='comment-box'>{com_header}<b>{cd['author_name']}</b> <span style='color:#666;font-size:0.8rem;'>{cd.get('timestamp','')[:16]}</span><br>{cd['text']}</div>", unsafe_allow_html=True)
                 
-                # Show replies
                 for r in db.collection("posts").document(pid).collection("comments").document(cid).collection("replies").order_by("timestamp").get():
                     rd = r.to_dict()
-                    st.markdown(f"<div class='reply-box'><b>{rd['author_name']}</b>: {rd['text']}</div>", unsafe_allow_html=True)
+                    reply_pic = rd.get("author_pic", "")
+                    reply_header = f"<img src='{reply_pic}' style='width:20px;height:20px;border-radius:50%;margin-right:5px;'>" if reply_pic else "👤"
+                    st.markdown(f"<div class='reply-box'>{reply_header}<b>{rd['author_name']}</b>: {rd['text']}</div>", unsafe_allow_html=True)
                 
-                # Reply form
                 with st.form(f"reply_{cid}", clear_on_submit=True):
                     reply_text = st.text_input("Reply...", key=f"reply_in_{cid}")
                     if st.form_submit_button("Reply") and reply_text.strip():
                         db.collection("posts").document(pid).collection("comments").document(cid).collection("replies").add({
-                            "author_id": me["user_id"], "author_name": me["full_name"],
+                            "author_id": me["user_id"], "author_name": me["full_name"], "author_pic": me.get("profile_pic", ""),
                             "text": reply_text.strip(), "timestamp": datetime.now().isoformat()
                         })
                         st.rerun()
             
-            # Add comment
             with st.form(f"com_{pid}", clear_on_submit=True):
                 com = st.text_input("Write a comment...", key=f"com_in_{pid}")
                 if st.form_submit_button("Post") and com.strip():
                     db.collection("posts").document(pid).collection("comments").add({
-                        "author_id": me["user_id"], "author_name": me["full_name"],
+                        "author_id": me["user_id"], "author_name": me["full_name"], "author_pic": me.get("profile_pic", ""),
                         "text": com.strip(), "timestamp": datetime.now().isoformat()
                     })
+                    # Notify post author
+                    if p["author_id"] != me["user_id"]:
+                        add_notification(p["author_id"], f"@{me['username']} commented on your post!", "comment")
                     st.rerun()
-        
         st.markdown("---")
+
+# ========================================
+# NOTIFICATIONS PAGE
+# ========================================
+elif page == "Notifs":
+    st.markdown("<h1 style='text-align:center;'>🔔 Notifications</h1>", unsafe_allow_html=True)
+    notifs = get_notifications(me["user_id"])
+    if not notifs: st.info("No notifications")
+    for n in notifs:
+        col1, col2 = st.columns([0.9, 0.1])
+        with col1:
+            bg = "rgba(0,243,255,0.1)" if not n.get("read") else "transparent"
+            st.markdown(f"<div style='background:{bg};padding:15px;border-radius:10px;border:1px solid rgba(0,243,255,0.2);margin-bottom:10px;'><p>{n['text']}</p><small style='color:#666;'>{n.get('timestamp','')[:16]}</small></div>", unsafe_allow_html=True)
+        with col2:
+            if not n.get("read") and st.button("✓", key=f"read_{n['id']}"):
+                db.collection("notifications").document(n["id"]).update({"read": True})
+                st.rerun()
 
 # ========================================
 # SEARCH PAGE
@@ -515,6 +413,7 @@ elif page == "Search":
                     if status == "none":
                         if c1.button("➕ Add Friend", key=f"add_{d['user_id']}"):
                             send_friend_req(me["user_id"], d["user_id"])
+                            add_notification(d["user_id"], f"@{me['username']} sent you a friend request!", "friend_request")
                             st.success("Request sent!"); time.sleep(1); st.rerun()
                     elif status == "friends": c1.markdown("<p style='color:#00ff7f;'>✨ Friends</p>", unsafe_allow_html=True)
                     elif status == "pending_in": c1.markdown("<p style='color:#ffa500;'>⏳ They sent request</p>", unsafe_allow_html=True)
@@ -525,7 +424,7 @@ elif page == "Search":
                         st.rerun()
 
 # ========================================
-# CHATS PAGE
+# CHATS PAGE (WhatsApp Style with Call)
 # ========================================
 elif page == "Chats":
     st.markdown("<h1 style='text-align:center;'>💬 Devi Messenger</h1>", unsafe_allow_html=True)
@@ -560,12 +459,20 @@ elif page == "Chats":
             st.info("Select a contact to start messaging")
         else:
             other = st.session_state.chat_user
-            header_cols = st.columns([0.1, 0.9])
+            header_cols = st.columns([0.1, 0.6, 0.3])
             with header_cols[0]:
                 if other.get("profile_pic"): st.image(other["profile_pic"], width=40)
                 else: st.markdown("👤")
             with header_cols[1]:
                 st.markdown(f"<h3>@{other['username']}</h3><p>{other.get('full_name','')}</p>", unsafe_allow_html=True)
+            with header_cols[2]:
+                # Call button (simulated)
+                if st.button("📞 Call", key=f"call_{other['user_id']}"):
+                    st.info(f"Calling @{other['username']}... (Simulated)")
+                # Recruit/Follow button
+                if st.button("➕ Recruit", key=f"recruit_{other['user_id']}"):
+                    st.success(f"Recruitment request sent to @{other['username']}!")
+            
             st.markdown("---")
             m1 = [{**m.to_dict(), "me": True} for m in db.collection("messages").where("sender_id","==",me["user_id"]).where("receiver_id","==",other["user_id"]).get()]
             m2 = [{**m.to_dict(), "me": False} for m in db.collection("messages").where("sender_id","==",other["user_id"]).where("receiver_id","==",me["user_id"]).get()]
@@ -585,6 +492,7 @@ elif page == "Chats":
                 txt = cols[0].text_input("Message...", label_visibility="collapsed")
                 if cols[1].form_submit_button("📤") and txt.strip():
                     db.collection("messages").add({"sender_id": me["user_id"], "receiver_id": other["user_id"], "message_body": txt.strip(), "timestamp": datetime.now().isoformat()})
+                    add_notification(other["user_id"], f"New message from @{me['username']}!", "message")
                     st.rerun()
 
 # ========================================
@@ -602,6 +510,7 @@ elif page == "Friends":
                 cols[0].markdown(f"**@{sender['username']}** {sender['full_name']}")
                 if cols[1].button("✅ Accept", key=f"acc_{req['id']}"):
                     accept_friend_req(req["id"])
+                    add_notification(req["sender_id"], f"@{me['username']} accepted your friend request!", "friend_accept")
                     st.success("Friend added!"); time.sleep(1); st.rerun()
                 if cols[2].button("❌ Reject", key=f"rej_{req['id']}"):
                     db.collection("friend_requests").document(req["id"]).delete()
@@ -624,7 +533,7 @@ elif page == "Friends":
                 st.rerun()
 
 # ========================================
-# PROFILE PAGE (Facebook Style with Upload)
+# PROFILE PAGE (Editable)
 # ========================================
 elif page == "Profile":
     uid = st.session_state.get("view_user") or me["user_id"]
@@ -634,14 +543,10 @@ elif page == "Profile":
         st.error("Profile not found")
         st.stop()
     
-    # Cover Photo
     cover = prof.get("cover_pic", "")
-    if cover:
-        st.image(cover, use_container_width=True)
-    else:
-        st.markdown("<div style='height:200px; background:linear-gradient(135deg,#00f3ff,#ff00ff); border-radius:20px;'></div>", unsafe_allow_html=True)
+    if cover: st.image(cover, use_container_width=True)
+    else: st.markdown("<div style='height:200px; background:linear-gradient(135deg,#00f3ff,#ff00ff); border-radius:20px;'></div>", unsafe_allow_html=True)
     
-    # Profile Info
     c1, c2, c3 = st.columns([1, 2, 1])
     with c1:
         pic = prof.get("profile_pic", "")
@@ -657,16 +562,16 @@ elif page == "Profile":
     with c3:
         if is_me:
             st.subheader("Edit Profile")
-            # Upload profile pic
-            prof_file = st.file_uploader("Profile Pic", type=["jpg", "jpeg", "png"])
-            cover_file = st.file_uploader("Cover Pic", type=["jpg", "jpeg", "png"])
-            if st.button("Update Photos"):
-                updates = {}
-                if prof_file:
-                    updates["profile_pic"] = file_to_base64(prof_file)
-                if cover_file:
-                    updates["cover_pic"] = file_to_base64(cover_file)
-                if updates:
+            with st.form("edit_profile"):
+                new_name = st.text_input("Display Name", value=prof.get("full_name", ""))
+                new_bio = st.text_area("Bio", value=prof.get("bio", ""))
+                new_city = st.text_input("City", value=prof.get("city", ""))
+                prof_file = st.file_uploader("New Profile Pic", type=["jpg", "jpeg", "png"])
+                cover_file = st.file_uploader("New Cover Pic", type=["jpg", "jpeg", "png"])
+                if st.form_submit_button("Update"):
+                    updates = {"full_name": new_name, "bio": new_bio, "city": new_city}
+                    if prof_file: updates["profile_pic"] = file_to_base64(prof_file)
+                    if cover_file: updates["cover_pic"] = file_to_base64(cover_file)
                     db.collection("users").document(uid).update(updates)
                     st.session_state.user = get_profile(uid)
                     st.success("Updated!"); time.sleep(1); st.rerun()
@@ -675,6 +580,7 @@ elif page == "Profile":
             if status == "none":
                 if st.button("➕ Add Friend"):
                     send_friend_req(me["user_id"], uid)
+                    add_notification(uid, f"@{me['username']} sent you a friend request!", "friend_request")
                     st.success("Request sent!"); time.sleep(1); st.rerun()
             elif status == "friends":
                 st.markdown("<p style='color:#00ff7f;'>✨ Friends</p>", unsafe_allow_html=True)
@@ -698,7 +604,7 @@ elif page == "Profile":
         if p.get("video"): st.video(p["video"])
 
 # ========================================
-# AI STUDIO PAGE
+# AI STUDIO
 # ========================================
 elif page == "AI":
     st.markdown("<h1 style='text-align:center;'>🤖 AI Studio</h1>", unsafe_allow_html=True)
