@@ -10,6 +10,7 @@ import base64
 from dateutil import parser
 import re
 import uuid
+import io
 
 st.set_page_config(page_title="Devi Social", page_icon="🔮", layout="wide", initial_sidebar_state="collapsed")
 
@@ -83,7 +84,7 @@ html, body, [data-testid="stAppViewContainer"] { background: #F0F2F5 !important;
 .chat-container { background: #FFF; border-radius: 8px; height: 600px; display: flex; flex-direction: column; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
 .chat-header { padding: 12px 16px; border-bottom: 1px solid #E5E7EB; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
 .chat-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; background: #FFF; }
-.message { display: flex; gap: 8px; margin-bottom: 8px; }
+.message { display: flex; gap: 8px; margin-bottom: 8px; align-items: flex-end; }
 .message.own { justify-content: flex-end; }
 .message-bubble { max-width: 60%; padding: 10px 14px; border-radius: 12px; word-wrap: break-word; font-size: 0.95rem; }
 .message-bubble.own { background: #0A66C2; color: #FFF; border-radius: 12px 2px 12px 12px; }
@@ -115,7 +116,7 @@ html, body, [data-testid="stAppViewContainer"] { background: #F0F2F5 !important;
 .btn-danger:hover { background: #C0392B; }
 
 /* PROFILE COVER */
-.profile-cover { background: linear-gradient(135deg, #0A66C2 0%, #0854A0 100%); height: 200px; border-radius: 8px; margin-bottom: 20px; position: relative; }
+.profile-cover { background: linear-gradient(135deg, #0A66C2 0%, #0854A0 100%); height: 200px; border-radius: 8px; margin-bottom: 20px; position: relative; background-size: cover; background-position: center; }
 .profile-pic { width: 120px; height: 120px; border-radius: 50%; background: #E4E6EB; display: flex; align-items: center; justify-content: center; font-size: 3rem; border: 4px solid #FFF; margin-top: -60px; margin-left: 20px; overflow: hidden; }
 .profile-pic img { width: 100%; height: 100%; object-fit: cover; }
 
@@ -125,6 +126,9 @@ html, body, [data-testid="stAppViewContainer"] { background: #F0F2F5 !important;
 .viewer-avatar { width: 32px; height: 32px; border-radius: 50%; background: #E4E6EB; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; flex-shrink: 0; overflow: hidden; }
 .viewer-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .viewer-name { font-weight: 600; color: #050505; font-size: 0.9rem; }
+
+/* PRIVACY BADGE */
+.privacy-badge { display: inline-block; background: #E4E6EB; color: #050505; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; margin-left: 8px; }
 
 </style>
 """, unsafe_allow_html=True)
@@ -143,6 +147,8 @@ def init_session_state():
     if "edit_post_id" not in st.session_state: st.session_state.edit_post_id = None
     if "show_comments" not in st.session_state: st.session_state.show_comments = {}
     if "view_story" not in st.session_state: st.session_state.view_story = None
+    if "search_query" not in st.session_state: st.session_state.search_query = ""
+    if "ai_chat" not in st.session_state: st.session_state.ai_chat = []
 
 init_session_state()
 
@@ -168,6 +174,7 @@ def get_db():
 
 db = get_db()
 FIREBASE_API_KEY = st.secrets.get("FIREBASE_API_KEY", "")
+GROQ_API_KEY = st.secrets.get("GROQ_API_KEY", "")
 
 # ========================================
 # HELPERS
@@ -279,6 +286,68 @@ def add_notification(user_id, text, type_="general"):
     try:
         db.collection("notifications").add({"user_id": user_id, "text": text, "type": type_, "read": False, "timestamp": datetime.now().isoformat()})
     except: pass
+
+def search_users(query):
+    if not db or not query: return []
+    try:
+        results = []
+        for u in db.collection("users").limit(50).stream():
+            user = u.to_dict()
+            if query.lower() in user.get("username", "").lower() or query.lower() in user.get("full_name", "").lower():
+                results.append(user)
+        return results[:10]
+    except: return []
+
+def can_view_post(post, viewer_id):
+    privacy = post.get("privacy", "public")
+    author_id = post.get("author_id")
+    
+    if privacy == "public": return True
+    if viewer_id == author_id: return True
+    if privacy == "friends":
+        if not db: return False
+        try:
+            fid = f"{min(viewer_id, author_id)}_{max(viewer_id, author_id)}"
+            return db.collection("friends").document(fid).get().exists
+        except: return False
+    return False
+
+def can_view_story(story, viewer_id):
+    privacy = story.get("privacy", "public")
+    author_id = story.get("author_id")
+    
+    if privacy == "public": return True
+    if viewer_id == author_id: return True
+    if privacy == "friends":
+        if not db: return False
+        try:
+            fid = f"{min(viewer_id, author_id)}_{max(viewer_id, author_id)}"
+            return db.collection("friends").document(fid).get().exists
+        except: return False
+    return False
+
+def chat_with_groq(message):
+    if not GROQ_API_KEY: return "AI not available"
+    try:
+        st.session_state.ai_chat.append({"role": "user", "content": message})
+        
+        url = "https://api.groq.com/openai/v1/chat/completions"
+        headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
+        data = {
+            "model": "mixtral-8x7b-32768",
+            "messages": st.session_state.ai_chat[-10:],
+            "max_tokens": 500,
+            "temperature": 0.7
+        }
+        
+        r = requests.post(url, json=data, headers=headers, timeout=10)
+        if r.status_code == 200:
+            response = r.json()["choices"][0]["message"]["content"]
+            st.session_state.ai_chat.append({"role": "assistant", "content": response})
+            return response
+        return "Error communicating with AI"
+    except Exception as e:
+        return f"AI Error: {str(e)}"
 
 # ========================================
 # AUTH
@@ -444,7 +513,9 @@ col1, col2, col3 = st.columns([1, 3, 1])
 with col1:
     st.markdown("<div class='logo'>f</div>", unsafe_allow_html=True)
 with col2:
-    pass
+    search = st.text_input("🔍 Search friends...", key="search_bar", placeholder="Search by name or username")
+    if search:
+        st.session_state.search_query = search
 with col3:
     c1, c2, c3, c4, c5 = st.columns(5)
     if c1.button("🏠", key="home_nav"):
@@ -453,8 +524,8 @@ with col3:
     if c2.button("👥", key="friends_nav"):
         st.session_state.page = "friends"
         st.rerun()
-    if c3.button("🎥", key="video_nav"):
-        st.session_state.page = "video"
+    if c3.button("🤖", key="ai_nav"):
+        st.session_state.page = "ai"
         st.rerun()
     if c4.button("👤", key="profile_nav"):
         st.session_state.page = "profile"
@@ -463,6 +534,41 @@ with col3:
         st.session_state.page = "notifications"
         st.rerun()
 st.markdown("</div>", unsafe_allow_html=True)
+
+# ========================================
+# SEARCH RESULTS
+# ========================================
+if st.session_state.search_query:
+    st.markdown("<h3>Search Results</h3>", unsafe_allow_html=True)
+    results = search_users(st.session_state.search_query)
+    if not results:
+        st.info("No users found")
+    else:
+        for user in results:
+            col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
+            col1.markdown(f"**@{user['username']}** {user['full_name']}")
+            
+            status = get_friend_status(me["user_id"], user["user_id"])
+            if status == "none":
+                if col2.button("➕", key=f"add_{user['user_id']}"):
+                    send_friend_req(me["user_id"], user["user_id"])
+                    add_notification(user["user_id"], f"@{me['username']} sent request!", "friend_request")
+                    st.success("Request sent!")
+                    st.rerun()
+            elif status == "friends":
+                col2.markdown("✅")
+            
+            if col3.button("👤", key=f"view_prof_{user['user_id']}"):
+                st.session_state.view_user = user["user_id"]
+                st.session_state.page = "profile"
+                st.rerun()
+            
+            if col4.button("💬", key=f"msg_{user['user_id']}"):
+                st.session_state.chat_user = user
+                st.session_state.page = "chat"
+                st.rerun()
+    
+    st.divider()
 
 # ========================================
 # HOME PAGE
@@ -486,11 +592,12 @@ if st.session_state.page == "home":
                 stories = list(db.collection("stories").order_by("timestamp", direction=firestore.Query.DESCENDING).limit(10).stream())
                 for story in stories:
                     s = story.to_dict()
-                    if s.get("image"):
-                        st.markdown(f"<div class='story-card'><img src='{s['image']}'><div class='story-label'>@{s['author_username']}</div></div>", unsafe_allow_html=True)
-                        if st.button("👁️", key=f"view_story_{story.id}"):
-                            st.session_state.view_story = {**s, "id": story.id}
-                            st.rerun()
+                    if can_view_story(s, me["user_id"]):
+                        if s.get("image"):
+                            st.markdown(f"<div class='story-card'><img src='{s['image']}'><div class='story-label'>@{s['author_username']}</div></div>", unsafe_allow_html=True)
+                            if st.button("👁️", key=f"view_story_{story.id}"):
+                                st.session_state.view_story = {**s, "id": story.id}
+                                st.rerun()
             except: pass
         
         st.markdown("</div>", unsafe_allow_html=True)
@@ -507,14 +614,17 @@ if st.session_state.page == "home":
         post_text = st.text_input("", placeholder="What's on your mind?", label_visibility="collapsed", key="post_input")
         st.markdown("</div>", unsafe_allow_html=True)
         
-        col_a, col_b, col_c = st.columns(3)
+        col_a, col_b, col_c, col_d = st.columns(4)
         img_file = col_a.file_uploader("📷 Photo", type=["jpg", "jpeg", "png"], key="img_upload")
         vid_file = col_b.file_uploader("🎥 Video", type=["mp4", "mov"], key="vid_upload")
+        voice_file = col_c.file_uploader("🎤 Voice", type=["mp3", "wav"], key="voice_upload")
+        privacy = col_d.selectbox("Privacy", ["Public", "Friends", "Private"], key="post_privacy")
         
         if st.button("📤 Post", use_container_width=True):
-            if post_text.strip() or img_file or vid_file:
+            if post_text.strip() or img_file or vid_file or voice_file:
                 img_data = file_to_base64(img_file)
                 vid_data = file_to_base64(vid_file)
+                voice_data = file_to_base64(voice_file)
                 if db:
                     post_id = str(uuid.uuid4())
                     db.collection("posts").document(post_id).set({
@@ -527,11 +637,12 @@ if st.session_state.page == "home":
                         "content": post_text.strip(),
                         "image": img_data,
                         "video": vid_data,
+                        "voice": voice_data,
                         "likes": 0,
                         "liked_by": [],
                         "views": 0,
                         "timestamp": datetime.now().isoformat(),
-                        "privacy": "public"
+                        "privacy": privacy.lower()
                     })
                     st.success("Posted!")
                     time.sleep(1)
@@ -550,6 +661,9 @@ if st.session_state.page == "home":
                     p = post.to_dict()
                     pid = post.id
                     
+                    if not can_view_post(p, me["user_id"]):
+                        continue
+                    
                     st.markdown("<div class='post-card'>", unsafe_allow_html=True)
                     
                     # Header
@@ -564,7 +678,8 @@ if st.session_state.page == "home":
                         st.session_state.view_user = p["author_id"]
                         st.session_state.page = "profile"
                         st.rerun()
-                    st.markdown(f"<div class='post-meta'>@{p['author_username']} • {p.get('author_city', '')} • {p['timestamp'][:10]}</div>", unsafe_allow_html=True)
+                    privacy_text = f"({p.get('privacy', 'public').upper()})"
+                    st.markdown(f"<div class='post-meta'>@{p['author_username']} • {p.get('author_city', '')} • {p['timestamp'][:10]} <span class='privacy-badge'>{privacy_text}</span></div>", unsafe_allow_html=True)
                     st.markdown("</div>", unsafe_allow_html=True)
                     st.markdown("</div>", unsafe_allow_html=True)
                     
@@ -580,6 +695,8 @@ if st.session_state.page == "home":
                         st.markdown(f"<img src='{p['image']}' class='post-image'>", unsafe_allow_html=True)
                     if p.get("video"):
                         st.video(p["video"])
+                    if p.get("voice"):
+                        st.audio(p["voice"])
                     
                     # Footer
                     st.markdown("<div class='post-footer'>", unsafe_allow_html=True)
@@ -595,6 +712,7 @@ if st.session_state.page == "home":
                             ref.update({"likes": firestore.Increment(-1), "liked_by": firestore.ArrayRemove([me["user_id"]])})
                         else:
                             ref.update({"likes": firestore.Increment(1), "liked_by": firestore.ArrayUnion([me["user_id"]])})
+                            add_notification(p["author_id"], f"@{me['username']} liked!", "like")
                         st.rerun()
                     
                     if col_y.button("💬 Comment", use_container_width=True, key=f"comment_{pid}"):
@@ -695,6 +813,7 @@ elif st.session_state.page == "create_story":
     
     with st.form("create_story_form"):
         story_type = st.radio("Story Type", ["Image", "Text"])
+        privacy = st.selectbox("Privacy", ["Public", "Friends", "Private"])
         
         if story_type == "Image":
             img = st.file_uploader("Upload Image", type=["jpg", "jpeg", "png"])
@@ -707,6 +826,7 @@ elif st.session_state.page == "create_story":
                         "image": img_data,
                         "text": "",
                         "viewers": [],
+                        "privacy": privacy.lower(),
                         "timestamp": datetime.now().isoformat()
                     })
                     st.success("Story posted!")
@@ -723,6 +843,7 @@ elif st.session_state.page == "create_story":
                         "image": "",
                         "text": text,
                         "viewers": [],
+                        "privacy": privacy.lower(),
                         "timestamp": datetime.now().isoformat()
                     })
                     st.success("Story posted!")
@@ -760,7 +881,7 @@ elif st.session_state.page == "friends":
     else:
         for f in friends:
             if f:
-                col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
+                col1, col2, col3, col4, col5 = st.columns([2, 1, 1, 1, 1])
                 col1.markdown(f"**@{f['username']}** {f['full_name']}")
                 if col2.button("💬", key=f"chat_{f['user_id']}"):
                     st.session_state.chat_user = f
@@ -770,10 +891,36 @@ elif st.session_state.page == "friends":
                     st.session_state.calling = True
                     st.session_state.call_user = f
                     st.rerun()
-                if col4.button("❌", key=f"unfriend_{f['user_id']}"):
+                if col4.button("👤", key=f"view_{f['user_id']}"):
+                    st.session_state.view_user = f["user_id"]
+                    st.session_state.page = "profile"
+                    st.rerun()
+                if col5.button("❌", key=f"unfriend_{f['user_id']}"):
                     unfriend(me["user_id"], f["user_id"])
                     st.success("Unfriended!")
                     st.rerun()
+
+# ========================================
+# AI PAGE
+# ========================================
+elif st.session_state.page == "ai":
+    st.markdown("<h2>🤖 Devi AI Assistant</h2>", unsafe_allow_html=True)
+    st.markdown("Chat with Devi, your personal AI assistant!")
+    
+    # Display chat history
+    for msg in st.session_state.ai_chat:
+        if msg["role"] == "user":
+            st.markdown(f"**You:** {msg['content']}")
+        else:
+            st.markdown(f"**Devi:** {msg['content']}")
+    
+    # Input
+    with st.form("ai_chat_form"):
+        user_input = st.text_area("Ask Devi anything...")
+        if st.form_submit_button("Send"):
+            if user_input.strip():
+                response = chat_with_groq(user_input)
+                st.rerun()
 
 # ========================================
 # PROFILE PAGE
@@ -786,7 +933,8 @@ elif st.session_state.page == "profile":
     if not prof:
         st.error("Profile not found")
     else:
-        st.markdown("<div class='profile-cover'></div>", unsafe_allow_html=True)
+        cover_style = f"background-image: url('{prof.get('cover_pic')}');" if prof.get("cover_pic") else ""
+        st.markdown(f"<div class='profile-cover' style='{cover_style}'></div>", unsafe_allow_html=True)
         
         col1, col2, col3 = st.columns([1, 2, 1])
         with col1:
@@ -836,17 +984,23 @@ elif st.session_state.page == "profile":
                     p = post.to_dict()
                     pid = post.id
                     
+                    if not can_view_post(p, me["user_id"]):
+                        continue
+                    
                     st.markdown("<div class='post-card'>", unsafe_allow_html=True)
                     st.markdown("<div class='post-header'>", unsafe_allow_html=True)
                     if p.get("author_pic"):
                         st.markdown(f"<div class='avatar'><img src='{p['author_pic']}'></div>", unsafe_allow_html=True)
                     else:
                         st.markdown("<div class='avatar'>👤</div>", unsafe_allow_html=True)
-                    st.markdown(f"<div class='post-author-info'><div class='post-author-name'>{p['author_name']}</div><div class='post-meta'>{p['timestamp'][:10]}</div></div>", unsafe_allow_html=True)
+                    privacy_text = f"({p.get('privacy', 'public').upper()})"
+                    st.markdown(f"<div class='post-author-info'><div class='post-author-name'>{p['author_name']}</div><div class='post-meta'>{p['timestamp'][:10]} <span class='privacy-badge'>{privacy_text}</span></div></div>", unsafe_allow_html=True)
                     st.markdown("</div>", unsafe_allow_html=True)
                     st.markdown(f"<div class='post-content'>{p['content']}</div>", unsafe_allow_html=True)
                     if p.get("image"):
                         st.markdown(f"<img src='{p['image']}' class='post-image'>", unsafe_allow_html=True)
+                    if p.get("voice"):
+                        st.audio(p["voice"])
                     
                     if is_me and st.button("🗑️ Delete", key=f"del_prof_post_{pid}"):
                         db.collection("posts").document(pid).delete()
@@ -867,10 +1021,12 @@ elif st.session_state.page == "edit_profile":
         new_bio = st.text_area("Bio", value=prof.get("bio", ""))
         new_city = st.text_input("City", value=prof.get("city", ""))
         new_pic = st.file_uploader("Profile Picture", type=["jpg", "jpeg", "png"])
+        new_cover = st.file_uploader("Cover Picture", type=["jpg", "jpeg", "png"])
         
         if st.form_submit_button("Save"):
             pic_data = file_to_base64(new_pic) if new_pic else prof.get("profile_pic", "")
-            save_profile(me["user_id"], {"full_name": new_name, "bio": new_bio, "city": new_city, "profile_pic": pic_data})
+            cover_data = file_to_base64(new_cover) if new_cover else prof.get("cover_pic", "")
+            save_profile(me["user_id"], {"full_name": new_name, "bio": new_bio, "city": new_city, "profile_pic": pic_data, "cover_pic": cover_data})
             st.session_state.user = get_profile(me["user_id"])
             st.success("Updated!")
             time.sleep(1)
@@ -905,20 +1061,26 @@ elif st.session_state.page == "chat":
                     bubble_cls = "message-bubble own" if is_me else "message-bubble other"
                     st.markdown(f"<div style='text-align: {'right' if is_me else 'left'};'><div class='{bubble_cls}'>{m['message_body']}</div></div>", unsafe_allow_html=True)
                     
+                    if m.get("voice"):
+                        st.audio(m["voice"])
+                    
                     if is_me and st.button("🗑️", key=f"del_msg_{m['id']}"):
                         db.collection("messages").document(m["id"]).delete()
                         st.rerun()
             except: pass
         
         with st.form("send_message"):
-            col1, col2 = st.columns([4, 1])
+            col1, col2, col3 = st.columns([3, 1, 1])
             msg = col1.text_input("Message", label_visibility="collapsed")
-            if col2.form_submit_button("📤"):
-                if msg.strip() and db:
+            voice = col2.file_uploader("🎤", type=["mp3", "wav"], key="voice_msg", label_visibility="collapsed")
+            if col3.form_submit_button("📤"):
+                if (msg.strip() or voice) and db:
+                    voice_data = file_to_base64(voice)
                     db.collection("messages").add({
                         "sender_id": me["user_id"],
                         "receiver_id": other["user_id"],
                         "message_body": msg.strip(),
+                        "voice": voice_data,
                         "timestamp": datetime.now().isoformat()
                     })
                     add_notification(other["user_id"], f"New message from @{me['username']}!", "message")
@@ -935,13 +1097,6 @@ elif st.session_state.page == "notifications":
     else:
         for n in notifs:
             st.markdown(f"<div style='background: #FFF; padding: 12px; border-radius: 8px; margin-bottom: 8px;'><p>{n['text']}</p><small style='color: #65676B;'>{n.get('timestamp', '')[:10]}</small></div>", unsafe_allow_html=True)
-
-# ========================================
-# VIDEO PAGE
-# ========================================
-elif st.session_state.page == "video":
-    st.markdown("<h2>Videos</h2>", unsafe_allow_html=True)
-    st.info("Video feature coming soon!")
 
 # ========================================
 # LOGOUT
