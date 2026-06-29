@@ -2,7 +2,6 @@ import streamlit as st
 import requests
 import firebase_admin
 from firebase_admin import credentials, firestore
-from groq import Groq
 from datetime import datetime, date
 import time
 import os
@@ -31,7 +30,6 @@ html, body, [data-testid="stAppViewContainer"] { background: #F0F2F5 !important;
 .nav-icons { display: flex; gap: 20px; }
 .nav-btn { background: none; border: none; font-size: 1.3rem; cursor: pointer; color: #65676B; padding: 8px 12px; border-radius: 50%; }
 .nav-btn:hover { background: #F0F2F5; color: #0A66C2; }
-.nav-btn.active { background: #E7F3FF; color: #0A66C2; }
 
 /* MAIN LAYOUT */
 .main-container { display: flex; gap: 16px; padding: 16px; max-width: 1400px; margin: 0 auto; }
@@ -42,7 +40,8 @@ html, body, [data-testid="stAppViewContainer"] { background: #F0F2F5 !important;
 .post-card { background: #FFF; border-radius: 8px; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); overflow: hidden; }
 .post-header { padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #E5E7EB; }
 .post-author { display: flex; gap: 12px; align-items: center; flex: 1; }
-.avatar { width: 40px; height: 40px; border-radius: 50%; background: #E4E6EB; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+.avatar { width: 40px; height: 40px; border-radius: 50%; background: #E4E6EB; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; overflow: hidden; border: 2px solid #E4E6EB; }
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
 .post-author-info { flex: 1; }
 .post-author-name { font-weight: 600; color: #050505; font-size: 0.95rem; cursor: pointer; }
 .post-author-name:hover { text-decoration: underline; }
@@ -59,12 +58,17 @@ html, body, [data-testid="stAppViewContainer"] { background: #F0F2F5 !important;
 
 /* STORY */
 .story-container { background: #FFF; border-radius: 8px; padding: 12px; margin-bottom: 16px; display: flex; gap: 8px; overflow-x: auto; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-.story-card { background: linear-gradient(135deg, #E4E6EB 0%, #D0D2D7 100%); border-radius: 8px; width: 100px; height: 150px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 2rem; border: 2px solid transparent; }
+.story-card { background: linear-gradient(135deg, #E4E6EB 0%, #D0D2D7 100%); border-radius: 8px; width: 100px; height: 150px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 2rem; border: 2px solid transparent; position: relative; overflow: hidden; }
+.story-card img { width: 100%; height: 100%; object-fit: cover; }
 .story-card:hover { border-color: #0A66C2; }
+.story-label { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: #FFF; padding: 4px; font-size: 0.75rem; text-align: center; }
 
 /* COMMENT */
 .comment-box { background: #F0F2F5; border-radius: 8px; padding: 12px; margin-top: 12px; }
-.comment-item { padding: 8px; margin-bottom: 8px; background: #FFF; border-radius: 8px; border-left: 3px solid #0A66C2; }
+.comment-item { padding: 8px; margin-bottom: 8px; background: #FFF; border-radius: 8px; border-left: 3px solid #0A66C2; display: flex; gap: 8px; }
+.comment-avatar { width: 32px; height: 32px; border-radius: 50%; background: #E4E6EB; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; flex-shrink: 0; overflow: hidden; }
+.comment-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.comment-content { flex: 1; }
 .comment-author { font-weight: 600; color: #050505; font-size: 0.9rem; }
 .comment-text { color: #65676B; margin-top: 4px; font-size: 0.9rem; }
 
@@ -91,7 +95,8 @@ html, body, [data-testid="stAppViewContainer"] { background: #F0F2F5 !important;
 
 /* CALL SCREEN */
 .call-screen { background: linear-gradient(135deg, #0A66C2 0%, #0854A0 100%); min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #FFF; }
-.call-avatar { width: 200px; height: 200px; border-radius: 50%; background: #E4E6EB; display: flex; align-items: center; justify-content: center; font-size: 4rem; margin-bottom: 30px; border: 4px solid #FFF; }
+.call-avatar { width: 200px; height: 200px; border-radius: 50%; background: #E4E6EB; display: flex; align-items: center; justify-content: center; font-size: 4rem; margin-bottom: 30px; border: 4px solid #FFF; overflow: hidden; }
+.call-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .call-name { font-size: 2rem; font-weight: 700; margin-bottom: 10px; }
 .call-status { font-size: 1.1rem; margin-bottom: 40px; opacity: 0.9; }
 .call-buttons { display: flex; gap: 30px; }
@@ -109,8 +114,17 @@ html, body, [data-testid="stAppViewContainer"] { background: #F0F2F5 !important;
 .btn-danger { background: #E74C3C; color: #FFF; }
 .btn-danger:hover { background: #C0392B; }
 
-/* NOTIFICATION */
-.notif-badge { background: #E74C3C; color: #FFF; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; }
+/* PROFILE COVER */
+.profile-cover { background: linear-gradient(135deg, #0A66C2 0%, #0854A0 100%); height: 200px; border-radius: 8px; margin-bottom: 20px; position: relative; }
+.profile-pic { width: 120px; height: 120px; border-radius: 50%; background: #E4E6EB; display: flex; align-items: center; justify-content: center; font-size: 3rem; border: 4px solid #FFF; margin-top: -60px; margin-left: 20px; overflow: hidden; }
+.profile-pic img { width: 100%; height: 100%; object-fit: cover; }
+
+/* STORY VIEWERS */
+.viewers-list { background: #F0F2F5; border-radius: 8px; padding: 12px; margin-top: 12px; }
+.viewer-item { padding: 8px; display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.viewer-avatar { width: 32px; height: 32px; border-radius: 50%; background: #E4E6EB; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; flex-shrink: 0; overflow: hidden; }
+.viewer-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.viewer-name { font-weight: 600; color: #050505; font-size: 0.9rem; }
 
 </style>
 """, unsafe_allow_html=True)
@@ -128,7 +142,7 @@ def init_session_state():
     if "view_user" not in st.session_state: st.session_state.view_user = None
     if "edit_post_id" not in st.session_state: st.session_state.edit_post_id = None
     if "show_comments" not in st.session_state: st.session_state.show_comments = {}
-    if "ai_msgs" not in st.session_state: st.session_state.ai_msgs = []
+    if "view_story" not in st.session_state: st.session_state.view_story = None
 
 init_session_state()
 
@@ -346,15 +360,67 @@ if not st.session_state.authenticated:
 me = st.session_state.user
 
 # ========================================
+# STORY VIEWING
+# ========================================
+if st.session_state.view_story:
+    story = st.session_state.view_story
+    st.markdown("<div style='background: linear-gradient(135deg, #0A66C2 0%, #0854A0 100%); min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #FFF; padding: 20px;'>", unsafe_allow_html=True)
+    
+    if story.get("image"):
+        st.markdown(f"<img src='{story['image']}' style='max-width: 100%; max-height: 70vh; border-radius: 8px; margin-bottom: 20px;'>", unsafe_allow_html=True)
+    else:
+        st.markdown(f"<h2 style='margin-bottom: 20px;'>{story.get('text', 'Story')}</h2>", unsafe_allow_html=True)
+    
+    st.markdown(f"<p style='margin-bottom: 20px;'><strong>By @{story['author_username']}</strong></p>", unsafe_allow_html=True)
+    
+    # Add viewer
+    if db:
+        try:
+            viewers = story.get("viewers", [])
+            if me["user_id"] not in viewers:
+                viewers.append(me["user_id"])
+                db.collection("stories").document(story["id"]).update({"viewers": viewers})
+        except: pass
+    
+    # Show viewers
+    st.markdown(f"<h4>👁️ {len(story.get('viewers', []))} Views</h4>", unsafe_allow_html=True)
+    
+    if story.get("viewers"):
+        st.markdown("<div class='viewers-list'>", unsafe_allow_html=True)
+        for viewer_id in story.get("viewers", [])[:10]:
+            viewer = get_profile(viewer_id)
+            if viewer:
+                st.markdown("<div class='viewer-item'>", unsafe_allow_html=True)
+                if viewer.get("profile_pic"):
+                    st.markdown(f"<div class='viewer-avatar'><img src='{viewer['profile_pic']}'></div>", unsafe_allow_html=True)
+                else:
+                    st.markdown("<div class='viewer-avatar'>👤</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='viewer-name'>@{viewer['username']}</div>", unsafe_allow_html=True)
+                st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+    
+    if st.button("Back"):
+        st.session_state.view_story = None
+        st.rerun()
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+    st.stop()
+
+# ========================================
 # CALLING SCREEN
 # ========================================
 if st.session_state.calling and st.session_state.call_user:
     call_user = st.session_state.call_user
     st.markdown("<div class='call-screen'>", unsafe_allow_html=True)
-    st.markdown(f"<div class='call-avatar'>📱</div>", unsafe_allow_html=True)
+    
+    if call_user.get("profile_pic"):
+        st.markdown(f"<div class='call-avatar'><img src='{call_user['profile_pic']}'></div>", unsafe_allow_html=True)
+    else:
+        st.markdown(f"<div class='call-avatar'>📱</div>", unsafe_allow_html=True)
+    
     st.markdown(f"<div class='call-name'>@{call_user['username']}</div>", unsafe_allow_html=True)
     st.markdown(f"<div class='call-status'>Calling...</div>", unsafe_allow_html=True)
-    st.markdown("<div class='call-buttons'>", unsafe_allow_html=True)
+    
     col1, col2, col3 = st.columns([1, 1, 1])
     with col2:
         c1, c2 = st.columns(2)
@@ -366,7 +432,7 @@ if st.session_state.calling and st.session_state.call_user:
         if c2.button("❌", use_container_width=True):
             st.session_state.calling = False
             st.rerun()
-    st.markdown("</div>", unsafe_allow_html=True)
+    
     st.markdown("</div>", unsafe_allow_html=True)
     st.stop()
 
@@ -405,18 +471,39 @@ if st.session_state.page == "home":
     col1, col2, col3 = st.columns([2, 1, 1])
     
     with col1:
-        # Story
+        # Story Section
+        st.markdown("<h4>Stories</h4>", unsafe_allow_html=True)
         st.markdown("<div class='story-container'>", unsafe_allow_html=True)
-        st.markdown("<div class='story-card'>+</div>", unsafe_allow_html=True)
-        for i in range(5):
-            st.markdown(f"<div class='story-card'>📱</div>", unsafe_allow_html=True)
+        
+        # Create Story
+        if st.button("➕ Create Story", key="create_story"):
+            st.session_state.page = "create_story"
+            st.rerun()
+        
+        # Show Stories
+        if db:
+            try:
+                stories = list(db.collection("stories").order_by("timestamp", direction=firestore.Query.DESCENDING).limit(10).stream())
+                for story in stories:
+                    s = story.to_dict()
+                    if s.get("image"):
+                        st.markdown(f"<div class='story-card'><img src='{s['image']}'><div class='story-label'>@{s['author_username']}</div></div>", unsafe_allow_html=True)
+                        if st.button("👁️", key=f"view_story_{story.id}"):
+                            st.session_state.view_story = {**s, "id": story.id}
+                            st.rerun()
+            except: pass
+        
         st.markdown("</div>", unsafe_allow_html=True)
+        st.divider()
         
         # Create Post
         st.markdown("<div class='post-card'>", unsafe_allow_html=True)
         st.markdown("<div style='padding: 12px 16px;'>", unsafe_allow_html=True)
         st.markdown("<div style='display: flex; gap: 12px; align-items: center; margin-bottom: 12px;'>", unsafe_allow_html=True)
-        st.markdown("<div class='avatar'>👤</div>", unsafe_allow_html=True)
+        if me.get("profile_pic"):
+            st.markdown(f"<div class='avatar'><img src='{me['profile_pic']}'></div>", unsafe_allow_html=True)
+        else:
+            st.markdown("<div class='avatar'>👤</div>", unsafe_allow_html=True)
         post_text = st.text_input("", placeholder="What's on your mind?", label_visibility="collapsed", key="post_input")
         st.markdown("</div>", unsafe_allow_html=True)
         
@@ -454,7 +541,7 @@ if st.session_state.page == "home":
         st.markdown("</div>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
         
-        # Posts
+        # Posts Feed
         if db:
             try:
                 posts = list(db.collection("posts").order_by("timestamp", direction=firestore.Query.DESCENDING).limit(50).stream())
@@ -468,7 +555,10 @@ if st.session_state.page == "home":
                     # Header
                     st.markdown("<div class='post-header'>", unsafe_allow_html=True)
                     st.markdown("<div class='post-author'>", unsafe_allow_html=True)
-                    st.markdown("<div class='avatar'>👤</div>", unsafe_allow_html=True)
+                    if p.get("author_pic"):
+                        st.markdown(f"<div class='avatar'><img src='{p['author_pic']}'></div>", unsafe_allow_html=True)
+                    else:
+                        st.markdown("<div class='avatar'>👤</div>", unsafe_allow_html=True)
                     st.markdown("<div class='post-author-info'>", unsafe_allow_html=True)
                     if st.button(f"{p['author_name']}", key=f"author_{pid}"):
                         st.session_state.view_user = p["author_id"]
@@ -525,9 +615,17 @@ if st.session_state.page == "home":
                             for comment in comments:
                                 c = comment.to_dict()
                                 cid = comment.id
-                                st.markdown(f"<div class='comment-item'><div class='comment-author'>{c['author_name']}</div><div class='comment-text'>{c['text']}</div></div>", unsafe_allow_html=True)
+                                st.markdown("<div class='comment-item'>", unsafe_allow_html=True)
+                                if c.get("author_pic"):
+                                    st.markdown(f"<div class='comment-avatar'><img src='{c['author_pic']}'></div>", unsafe_allow_html=True)
+                                else:
+                                    st.markdown("<div class='comment-avatar'>👤</div>", unsafe_allow_html=True)
+                                st.markdown("<div class='comment-content'>", unsafe_allow_html=True)
+                                st.markdown(f"<div class='comment-author'>{c['author_name']}</div>", unsafe_allow_html=True)
+                                st.markdown(f"<div class='comment-text'>{c['text']}</div>", unsafe_allow_html=True)
+                                st.markdown("</div>", unsafe_allow_html=True)
+                                st.markdown("</div>", unsafe_allow_html=True)
                                 
-                                # Delete comment
                                 if c["author_id"] == me["user_id"] and st.button("🗑️ Delete", key=f"del_comment_{cid}"):
                                     db.collection("posts").document(pid).collection("comments").document(cid).delete()
                                     st.rerun()
@@ -540,6 +638,7 @@ if st.session_state.page == "home":
                                     db.collection("posts").document(pid).collection("comments").add({
                                         "author_id": me["user_id"],
                                         "author_name": me["full_name"],
+                                        "author_pic": me.get("profile_pic", ""),
                                         "text": comment_text.strip(),
                                         "timestamp": datetime.now().isoformat()
                                     })
@@ -580,7 +679,56 @@ if st.session_state.page == "home":
         friends = get_my_friends(me["user_id"])
         for f in friends[:5]:
             if f:
-                st.markdown(f"<div class='friend-item'><div class='avatar'>👤</div><div class='friend-info'><div class='friend-name'>@{f['username']}</div><div class='friend-status'>Online</div></div></div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='friend-item'>", unsafe_allow_html=True)
+                if f.get("profile_pic"):
+                    st.markdown(f"<div class='avatar'><img src='{f['profile_pic']}'></div>", unsafe_allow_html=True)
+                else:
+                    st.markdown("<div class='avatar'>👤</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='friend-info'><div class='friend-name'>@{f['username']}</div><div class='friend-status'>Online</div></div>", unsafe_allow_html=True)
+                st.markdown("</div>", unsafe_allow_html=True)
+
+# ========================================
+# CREATE STORY
+# ========================================
+elif st.session_state.page == "create_story":
+    st.markdown("<h2>Create Story</h2>", unsafe_allow_html=True)
+    
+    with st.form("create_story_form"):
+        story_type = st.radio("Story Type", ["Image", "Text"])
+        
+        if story_type == "Image":
+            img = st.file_uploader("Upload Image", type=["jpg", "jpeg", "png"])
+            if st.form_submit_button("Post Story"):
+                if img and db:
+                    img_data = file_to_base64(img)
+                    db.collection("stories").add({
+                        "author_id": me["user_id"],
+                        "author_username": me["username"],
+                        "image": img_data,
+                        "text": "",
+                        "viewers": [],
+                        "timestamp": datetime.now().isoformat()
+                    })
+                    st.success("Story posted!")
+                    time.sleep(1)
+                    st.session_state.page = "home"
+                    st.rerun()
+        else:
+            text = st.text_area("Story Text")
+            if st.form_submit_button("Post Story"):
+                if text and db:
+                    db.collection("stories").add({
+                        "author_id": me["user_id"],
+                        "author_username": me["username"],
+                        "image": "",
+                        "text": text,
+                        "viewers": [],
+                        "timestamp": datetime.now().isoformat()
+                    })
+                    st.success("Story posted!")
+                    time.sleep(1)
+                    st.session_state.page = "home"
+                    st.rerun()
 
 # ========================================
 # FRIENDS PAGE
@@ -638,11 +786,14 @@ elif st.session_state.page == "profile":
     if not prof:
         st.error("Profile not found")
     else:
-        st.markdown("<div style='background: linear-gradient(135deg, #0A66C2 0%, #0854A0 100%); height: 200px; border-radius: 8px;'></div>", unsafe_allow_html=True)
+        st.markdown("<div class='profile-cover'></div>", unsafe_allow_html=True)
         
         col1, col2, col3 = st.columns([1, 2, 1])
         with col1:
-            st.markdown("<div class='avatar' style='width: 100px; height: 100px; font-size: 3rem;'>👤</div>", unsafe_allow_html=True)
+            if prof.get("profile_pic"):
+                st.markdown(f"<div class='profile-pic'><img src='{prof['profile_pic']}'></div>", unsafe_allow_html=True)
+            else:
+                st.markdown("<div class='profile-pic'>👤</div>", unsafe_allow_html=True)
         with col2:
             st.markdown(f"<h2>{prof['full_name']}</h2>", unsafe_allow_html=True)
             st.markdown(f"<p>@{prof['username']} • {prof.get('city', '')}</p>", unsafe_allow_html=True)
@@ -668,6 +819,10 @@ elif st.session_state.page == "profile":
                         st.session_state.chat_user = prof
                         st.session_state.page = "chat"
                         st.rerun()
+                    if st.button("📞 Call"):
+                        st.session_state.calling = True
+                        st.session_state.call_user = prof
+                        st.rerun()
         
         st.divider()
         
@@ -679,7 +834,25 @@ elif st.session_state.page == "profile":
                     st.info("No posts")
                 for post in user_posts:
                     p = post.to_dict()
-                    st.markdown(f"<div class='post-card'><div class='post-content'>{p['content']}</div></div>", unsafe_allow_html=True)
+                    pid = post.id
+                    
+                    st.markdown("<div class='post-card'>", unsafe_allow_html=True)
+                    st.markdown("<div class='post-header'>", unsafe_allow_html=True)
+                    if p.get("author_pic"):
+                        st.markdown(f"<div class='avatar'><img src='{p['author_pic']}'></div>", unsafe_allow_html=True)
+                    else:
+                        st.markdown("<div class='avatar'>👤</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div class='post-author-info'><div class='post-author-name'>{p['author_name']}</div><div class='post-meta'>{p['timestamp'][:10]}</div></div>", unsafe_allow_html=True)
+                    st.markdown("</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div class='post-content'>{p['content']}</div>", unsafe_allow_html=True)
+                    if p.get("image"):
+                        st.markdown(f"<img src='{p['image']}' class='post-image'>", unsafe_allow_html=True)
+                    
+                    if is_me and st.button("🗑️ Delete", key=f"del_prof_post_{pid}"):
+                        db.collection("posts").document(pid).delete()
+                        st.rerun()
+                    
+                    st.markdown("</div>", unsafe_allow_html=True)
             except: pass
 
 # ========================================
@@ -693,9 +866,11 @@ elif st.session_state.page == "edit_profile":
         new_name = st.text_input("Full Name", value=prof.get("full_name", ""))
         new_bio = st.text_area("Bio", value=prof.get("bio", ""))
         new_city = st.text_input("City", value=prof.get("city", ""))
+        new_pic = st.file_uploader("Profile Picture", type=["jpg", "jpeg", "png"])
         
         if st.form_submit_button("Save"):
-            save_profile(me["user_id"], {"full_name": new_name, "bio": new_bio, "city": new_city})
+            pic_data = file_to_base64(new_pic) if new_pic else prof.get("profile_pic", "")
+            save_profile(me["user_id"], {"full_name": new_name, "bio": new_bio, "city": new_city, "profile_pic": pic_data})
             st.session_state.user = get_profile(me["user_id"])
             st.success("Updated!")
             time.sleep(1)
